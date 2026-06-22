@@ -281,9 +281,10 @@ export const tradingFoundationsPath: LearningPathContent = {
             },
             {
               id: "chart1",
-              type: "chart-example",
+              type: "chart-demo",
+              scenarioId: "demo-candlestick-anatomy",
               content:
-                "Use the chart example below to identify the body and wicks on recent candles. Notice how wicks show rejection of certain prices.",
+                "Identify the body and wicks on these candles. Notice how long wicks show prices that were rejected.",
             },
             {
               id: "sum1",
@@ -342,6 +343,13 @@ export const tradingFoundationsPath: LearningPathContent = {
               type: "callout",
               content: "Context matters — the same green candle means different things in an uptrend vs a downtrend.",
               metadata: { variant: "key-idea" },
+            },
+            {
+              id: "chart1",
+              type: "chart-demo",
+              scenarioId: "demo-bullish-bearish",
+              content:
+                "Count the consecutive green vs red bodies. Which side controlled this move?",
             },
             {
               id: "sum1",
@@ -427,6 +435,19 @@ export const tradingFoundationsPath: LearningPathContent = {
               metadata: { variant: "key-idea" },
             },
             {
+              id: "chart-demo",
+              type: "chart-demo",
+              scenarioId: "demo-swing-high-low",
+              content:
+                "Here a few swing highs and lows are labelled for you. Notice the rising lows.",
+            },
+            {
+              id: "chart-lab",
+              type: "interactive-chart-question",
+              scenarioId: "task-mark-swing-high",
+              content: "Now prove you can see it — mark the swing high yourself.",
+            },
+            {
               id: "sum1",
               type: "summary",
               content: "Swings are the skeleton of the chart. Trends and ranges are built from them.",
@@ -478,9 +499,17 @@ export const tradingFoundationsPath: LearningPathContent = {
             },
             {
               id: "chart1",
-              type: "chart-example",
+              type: "chart-demo",
+              scenarioId: "demo-trend-range",
               content:
-                "On the chart below, trace the last three swing highs and lows. Does structure look directional or sideways?",
+                "This chart is ranging — the highs and lows are level. Compare it to a trend in your head.",
+            },
+            {
+              id: "chart-lab",
+              type: "interactive-chart-question",
+              scenarioId: "task-spot-trend",
+              content:
+                "Now an uptrend — mark the higher low that keeps the trend alive.",
             },
             {
               id: "sum1",
@@ -625,6 +654,20 @@ export const tradingFoundationsPath: LearningPathContent = {
               type: "callout",
               content: "You can be wrong often and still learn — if losses stay small and controlled.",
               metadata: { variant: "key-idea" },
+            },
+            {
+              id: "chart-demo",
+              type: "chart-demo",
+              scenarioId: "demo-risk-reward",
+              content:
+                "Entry, stop, and target shown. The reward distance is far larger than the risk distance.",
+            },
+            {
+              id: "chart-lab",
+              type: "interactive-chart-question",
+              scenarioId: "task-risk-reward",
+              content:
+                "Your turn — place an entry, stop, and target with at least a 1:2 risk/reward.",
             },
             {
               id: "sum1",

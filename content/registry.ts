@@ -1,12 +1,14 @@
 import { spotTheTrendDrill } from "@/content/drills/spot-the-trend"
 import {
   forexBasicsPath,
-  iccStrategyPath,
-  priceActionPath,
   riskManagementPath,
   tradingPsychologyPath,
 } from "@/content/paths/preview-paths"
+import { iccStrategyPath } from "@/content/paths/icc-strategy"
+import { priceActionPath } from "@/content/paths/price-action"
 import { tradingFoundationsPath } from "@/content/paths/trading-foundations"
+import { iccCheckQuiz } from "@/content/quizzes/icc-check"
+import { priceActionLevelsCheckQuiz } from "@/content/quizzes/price-action-check"
 import {
   candlestickBasicsQuiz,
   tradingBasicsCheckQuiz,
@@ -43,6 +45,8 @@ const RAW_PATHS = [
 const RAW_QUIZZES: CourseQuiz[] = [
   tradingBasicsCheckQuiz,
   candlestickBasicsQuiz,
+  priceActionLevelsCheckQuiz,
+  iccCheckQuiz,
 ]
 
 const RAW_DRILLS: ChartDrill[] = [spotTheTrendDrill]

@@ -9,6 +9,7 @@ import {
   SparklesIcon,
 } from "lucide-react"
 
+import { ChartLab } from "@/components/chart-lab/chart-lab"
 import { TrainingChart } from "@/components/training/training-chart"
 import { generateMockCandles } from "@/lib/mock-data"
 import type { ContentBlock } from "@/lib/course/types"
@@ -174,8 +175,28 @@ export function LessonRenderer({ blocks, showChart = true }: LessonRendererProps
                 )}
               </div>
             )
+          case "chart-demo":
+          case "chart-lab":
+          case "interactive-chart-question":
+            return block.scenarioId ? (
+              <ChartLab
+                key={block.id}
+                scenarioId={block.scenarioId}
+                caption={block.content || undefined}
+              />
+            ) : null
           case "chart-example":
-            return showChart ? (
+            if (!showChart) return null
+            if (block.scenarioId) {
+              return (
+                <ChartLab
+                  key={block.id}
+                  scenarioId={block.scenarioId}
+                  caption={block.content || undefined}
+                />
+              )
+            }
+            return (
               <div
                 key={block.id}
                 className="overflow-hidden rounded-xl border border-border/60 bg-card/50"
@@ -186,7 +207,7 @@ export function LessonRenderer({ blocks, showChart = true }: LessonRendererProps
                 </div>
                 <TrainingChart candles={chartCandles} readOnly />
               </div>
-            ) : null
+            )
           default:
             return (
               <p key={block.id} className="text-sm text-muted-foreground">

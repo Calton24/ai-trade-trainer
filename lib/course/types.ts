@@ -18,6 +18,9 @@ export type ContentBlockType =
   | "checklist"
   | "image"
   | "chart-example"
+  | "chart-demo"
+  | "chart-lab"
+  | "interactive-chart-question"
   | "interactive-question"
   | "summary"
   | "safety-note"
@@ -41,6 +44,8 @@ export interface ContentBlock {
   content: string
   /** For definition: term. For callout: variant key idea | mistake | tip */
   metadata?: Record<string, string | string[]>
+  /** For chart-demo / chart-lab / interactive-chart-question blocks. */
+  scenarioId?: string
   estimatedReadTime?: number
 }
 

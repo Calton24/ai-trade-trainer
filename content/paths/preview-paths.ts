@@ -47,7 +47,7 @@ export const forexBasicsPath: LearningPathContent = {
     "Preview syllabus for currency pairs, pips, sessions, and forex terminology.",
   level: "beginner",
   category: "forex",
-  order: 2,
+  order: 3,
   isFree: true,
   status: "preview",
   locked: false,
@@ -59,28 +59,6 @@ export const forexBasicsPath: LearningPathContent = {
   modules: [
     previewModule("forex-basics", "fx-m1", "What is Forex?", "Introduction to currency markets", 1),
     previewModule("forex-basics", "fx-m2", "Pips & Pairs", "Reading EUR/USD and friends", 2),
-  ],
-}
-
-export const priceActionPath: LearningPathContent = {
-  id: "price-action",
-  slug: "price-action",
-  title: "Price Action Fundamentals",
-  description: "Preview syllabus for support, resistance, breakouts, and retests.",
-  level: "beginner",
-  category: "price-action",
-  order: 3,
-  isFree: true,
-  status: "preview",
-  locked: false,
-  skillsYouGain: ["Mark support and resistance", "Spot break and retest setups"],
-  whatYouLearn: ["Key levels", "Breakouts vs fakeouts", "Retest entries"],
-  relatedPathSlugs: ["trading-foundations", "icc-strategy"],
-  estimatedMinutes: 0,
-  stats: { moduleCount: 0, lessonCount: 0, quizCount: 0, drillCount: 0, reflectionCount: 0 },
-  modules: [
-    previewModule("price-action", "pa-m1", "Support & Resistance", "Finding key levels", 1),
-    previewModule("price-action", "pa-m2", "Break & Retest", "Classic price action entry", 2),
   ],
 }
 

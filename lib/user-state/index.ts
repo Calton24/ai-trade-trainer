@@ -1,4 +1,3 @@
-import { badgeDefinitions } from "@/lib/mock/badges"
 import {
   getAllLessons,
   getLessonById,
@@ -105,7 +104,7 @@ function updateStreak(progress: StoredUserProgress): StoredUserProgress {
 
 export function awardXP(state: UserState, amount: number): UserState {
   let progress = updateStreak(state.progress)
-  let xp = progress.xp + amount
+  const xp = progress.xp + amount
   let level = progress.level
   while (xp >= xpForLevel(level)) {
     level += 1

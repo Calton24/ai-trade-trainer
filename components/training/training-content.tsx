@@ -1,30 +1,67 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { BookOpenIcon, PenLineIcon } from "lucide-react"
+import { BookOpenIcon, InfoIcon, LineChartIcon } from "lucide-react"
 
+import { getChartScenario, getInteractiveScenarios } from "@/content/chart-scenarios"
 import { getDrillById as getCourseDrill } from "@/content/registry"
 
 import { AppShell } from "@/components/layout/app-shell"
+import { ChartLabWorkspace } from "@/components/chart-lab/chart-lab-workspace"
 import { useUserState } from "@/components/providers/user-state-provider"
-import { EmptyState } from "@/components/shared/empty-state"
-import { AiCoachPanel } from "@/components/training/ai-coach-panel"
-import { DrillSelector } from "@/components/training/drill-selector"
-import { MarkToolbar } from "@/components/training/mark-toolbar"
-import { TrainingChart } from "@/components/training/training-chart"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { drills, generateMockCandles } from "@/lib/mock-data"
-import type { StoredDrillSession } from "@/lib/user-state/types"
+import type {
+  ChartScoreResult,
+  MarkerTool,
+  UserMarker,
+} from "@/lib/charts/types"
 import type { AIReview, TradeMark, TradeMarkType } from "@/lib/types"
+import type { StoredDrillSession } from "@/lib/user-state/types"
 
-function formatMarksSummary(marks: TradeMark[]): string {
-  if (marks.length === 0) return "No marks placed"
-  return marks
-    .map((m) => `${m.type.replace("_", " ")} at ${m.price.toLocaleString()}`)
+const TOOL_TO_MARK: Partial<Record<MarkerTool, TradeMarkType>> = {
+  support: "support",
+  resistance: "resistance",
+  "swing-high": "trend",
+  "swing-low": "trend",
+  trendline: "trend",
+  break: "break",
+  retest: "retest",
+  entry: "entry",
+  "stop-loss": "stop_loss",
+  "take-profit": "take_profit",
+}
+
+function markersToTradeMarks(markers: UserMarker[]): TradeMark[] {
+  return markers
+    .map((m) => {
+      const type = TOOL_TO_MARK[m.tool]
+      if (!type) return null
+      return { type, price: m.price, index: m.index }
+    })
+    .filter((m): m is TradeMark => m !== null)
+}
+
+function resultToReview(result: ChartScoreResult): AIReview {
+  return {
+    score: result.score,
+    summary: result.summary,
+    strengths: result.correct,
+    mistakes: result.improvements,
+    improvement: result.tip,
+    recommendation: result.passed ? "take" : "skip",
+    beginnerExplanation: result.tip,
+  }
+}
+
+function marksSummary(markers: UserMarker[]): string {
+  if (markers.length === 0) return "No markers placed"
+  return markers
+    .map((m) => `${m.tool.replace("-", " ")} at ${m.price.toLocaleString()}`)
     .join(", ")
 }
 
@@ -34,118 +71,58 @@ export function TrainingContent() {
   const linkedLessonId = searchParams.get("lesson")
 
   const { state, recordDrillSession, addJournalEntry } = useUserState()
-  const candles = useMemo(() => generateMockCandles(50), [])
+  const scenarios = useMemo(() => getInteractiveScenarios(), [])
   const courseDrill = courseDrillId ? getCourseDrill(courseDrillId) : null
 
-  const [selectedDrillId, setSelectedDrillId] = useState(drills[0].id)
-  const selectedDrill =
-    drills.find((d) => d.id === selectedDrillId) ?? drills[0]
+  const initialScenarioId = useMemo(() => {
+    if (courseDrill?.lessonId) {
+      // Prefer a scenario tied to the same concept when arriving from a drill.
+      const match = scenarios.find((s) => s.id.includes(courseDrill.drillType))
+      if (match) return match.id
+    }
+    return scenarios[0]?.id ?? ""
+  }, [courseDrill, scenarios])
 
-  useEffect(() => {
-    if (!courseDrill?.legacyDrillType) return
-    const legacy = drills.find((d) => d.type === courseDrill.legacyDrillType)
-    if (legacy) setSelectedDrillId(legacy.id)
-  }, [courseDrill])
-
-  const [marks, setMarks] = useState<TradeMark[]>([])
-  const [activeMarkType, setActiveMarkType] = useState<TradeMarkType | null>(
-    null
-  )
-  const [review, setReview] = useState<AIReview | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [sessionSaved, setSessionSaved] = useState(false)
+  const [selectedId, setSelectedId] = useState(initialScenarioId)
+  const [lastResult, setLastResult] = useState<{
+    result: ChartScoreResult
+    markers: UserMarker[]
+  } | null>(null)
   const [confidence, setConfidence] = useState<1 | 2 | 3 | 4 | 5>(3)
   const [personalNote, setPersonalNote] = useState("")
   const [journalSaved, setJournalSaved] = useState(false)
 
-  const handleDrillChange = (id: string) => {
-    setSelectedDrillId(id)
-    setMarks([])
-    setReview(null)
-    setActiveMarkType(null)
-    setSessionSaved(false)
-    setJournalSaved(false)
+  const scenario = getChartScenario(selectedId) ?? scenarios[0]
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id)
+    setLastResult(null)
     setPersonalNote("")
+    setJournalSaved(false)
   }
 
-  const handleMark = useCallback(
-    (index: number, price: number) => {
-      if (!activeMarkType) return
-      setMarks((prev) => {
-        const filtered = prev.filter((m) => m.type !== activeMarkType)
-        return [...filtered, { type: activeMarkType, price, index }]
-      })
-      setReview(null)
-      setSessionSaved(false)
-      setJournalSaved(false)
-    },
-    [activeMarkType]
-  )
-
-  const handleSubmit = async () => {
-    setIsLoading(true)
-    setReview(null)
-    setSessionSaved(false)
+  const handleComplete = (result: ChartScoreResult, markers: UserMarker[]) => {
+    setLastResult({ result, markers })
     setJournalSaved(false)
 
-    try {
-      const response = await fetch("/api/ai-review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          marks,
-          drillType: selectedDrill.type,
-          pair: "BTC/USDT",
-        }),
-      })
-      const data = await response.json()
-      const aiReview = data.review as AIReview
-      setReview(aiReview)
-
-      recordDrillSession(
-        {
-          drillType: selectedDrill.type,
-          drillTitle: courseDrill?.title ?? selectedDrill.title,
-          marks,
-          review: aiReview,
-          score: aiReview.score,
-        },
-        linkedLessonId ?? courseDrill?.lessonId
-      )
-      setSessionSaved(true)
-    } catch {
-      setReview({
-        score: 0,
-        strengths: [],
-        mistakes: ["Something went wrong. Please try submitting again."],
-        improvement: "Check your connection and retry.",
-        recommendation: "skip",
-        summary: "Review request failed.",
-        beginnerExplanation:
-          "We couldn't process your answer right now. Your markers are still on the chart — try again in a moment.",
-      })
-    } finally {
-      setIsLoading(false)
+    const session: Omit<StoredDrillSession, "id" | "completedAt"> = {
+      drillType: scenario.concept,
+      drillTitle: scenario.title,
+      marks: markersToTradeMarks(markers),
+      review: resultToReview(result),
+      score: result.score,
     }
-  }
-
-  const handleReset = () => {
-    setMarks([])
-    setReview(null)
-    setActiveMarkType(null)
-    setSessionSaved(false)
-    setJournalSaved(false)
-    setPersonalNote("")
+    recordDrillSession(session, linkedLessonId ?? courseDrill?.lessonId)
   }
 
   const handleSaveJournal = () => {
-    if (!review) return
+    if (!lastResult) return
     addJournalEntry({
-      setupPracticed: selectedDrill.title,
-      marksSummary: formatMarksSummary(marks),
-      aiFeedbackSummary: review.summary,
+      setupPracticed: scenario.title,
+      marksSummary: marksSummary(lastResult.markers),
+      aiFeedbackSummary: lastResult.result.summary,
       confidenceRating: confidence,
-      mistakeTag: review.mistakes[0] ?? "None noted",
+      mistakeTag: lastResult.result.improvements[0] ?? "None noted",
       personalNote: personalNote.trim() || "No personal note added.",
     })
     setJournalSaved(true)
@@ -153,117 +130,131 @@ export function TrainingContent() {
 
   const hasHistory = state.drillSessions.length > 0
 
+  if (!scenario) {
+    return (
+      <AppShell>
+        <p className="text-muted-foreground">No drills available yet.</p>
+      </AppShell>
+    )
+  }
+
   return (
     <AppShell>
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            Chart Drills
+          <div className="flex items-center gap-2 text-primary">
+            <LineChartIcon className="size-5" />
+            <span className="text-sm font-medium">Chart Lab Drills</span>
+          </div>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+            Practice reading the chart
           </h1>
           <p className="text-muted-foreground">
-            Learn trading by doing — practice on replay charts with instant
-            feedback
+            Read the concept, then prove you can see it on the chart. Pick a
+            drill, mark the structure or trade it asks for, and get instant
+            feedback.
           </p>
         </div>
 
-        {!hasHistory && (
-          <EmptyState
-            icon={PenLineIcon}
-            title="You haven't completed any drills yet"
-            description="Choose a drill below, mark levels on the chart, and submit for AI-style feedback."
-            action={
-              <Button onClick={() => document.getElementById("drill-chart")?.scrollIntoView({ behavior: "smooth" })}>
-                Start your first drill
-              </Button>
-            }
-          />
-        )}
-
-        <DrillSelector
-          drills={drills}
-          selectedId={selectedDrillId}
-          onSelect={handleDrillChange}
-        />
-
-        <div id="drill-chart" className="grid gap-4 lg:grid-cols-[1fr_360px]">
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card/50 ring-1 ring-white/[0.02]">
-            <TrainingChart
-              candles={candles}
-              marks={marks}
-              activeMarkType={activeMarkType}
-              onMark={handleMark}
-            />
-            <MarkToolbar
-              drill={selectedDrill}
-              activeMarkType={activeMarkType}
-              onSelectMark={setActiveMarkType}
-              onSubmit={handleSubmit}
-              onReset={handleReset}
-              isSubmitting={isLoading}
-              markCount={marks.length}
-            />
-          </div>
-
-          <div className="flex min-h-[400px] flex-col gap-4 lg:min-h-0">
-            <AiCoachPanel review={review} isLoading={isLoading} />
-
-            {review && sessionSaved && !journalSaved && (
-              <div className="rounded-xl border border-border/60 bg-card/50 p-4">
-                <p className="text-sm font-medium">Save to journal</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Reflect on this drill to build your practice journal.
-                </p>
-                <div className="mt-4 flex flex-col gap-3">
-                  <div>
-                    <Label className="text-xs">Confidence (1–5)</Label>
-                    <div className="mt-2 flex gap-2">
-                      {([1, 2, 3, 4, 5] as const).map((n) => (
-                        <Button
-                          key={n}
-                          type="button"
-                          size="sm"
-                          variant={confidence === n ? "default" : "outline"}
-                          onClick={() => setConfidence(n)}
-                        >
-                          {n}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="personal-note" className="text-xs">
-                      Personal note
-                    </Label>
-                    <Textarea
-                      id="personal-note"
-                      className="mt-2"
-                      placeholder="What did you learn from this drill?"
-                      value={personalNote}
-                      onChange={(e) => setPersonalNote(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  <Button onClick={handleSaveJournal}>Save Reflection</Button>
-                </div>
-              </div>
-            )}
-
-            {journalSaved && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
-                <p className="font-medium text-primary">Saved to journal</p>
-                <Button
-                  className="mt-3"
-                  size="sm"
-                  variant="outline"
-                  render={<Link href="/journal" />}
-                >
-                  <BookOpenIcon data-icon="inline-start" />
-                  View Journal
-                </Button>
-              </div>
-            )}
+        {/* Scenario / drill selector */}
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-medium">Choose a drill</p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {scenarios.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleSelect(s.id)}
+                aria-pressed={s.id === selectedId}
+                className={
+                  "flex flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-colors " +
+                  (s.id === selectedId
+                    ? "border-primary/30 bg-primary/10 ring-1 ring-primary/20"
+                    : "border-border/60 bg-card/50 hover:border-primary/20 hover:bg-muted/30")
+                }
+              >
+                <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                  {s.title}
+                  <Badge variant="secondary" className="text-[10px] capitalize">
+                    {s.difficulty}
+                  </Badge>
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {s.description}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
+
+        {/* The Chart Lab itself */}
+        <div className="rounded-xl border border-border/60 bg-card/50 p-4">
+          <ChartLabWorkspace
+            key={scenario.id}
+            scenario={scenario}
+            variant="full"
+            onComplete={handleComplete}
+          />
+        </div>
+
+        {/* Journal reflection save */}
+        {lastResult && !journalSaved && (
+          <div className="rounded-xl border border-border/60 bg-card/50 p-5">
+            <p className="text-sm font-medium">Save a reflection to your journal</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Writing down what you saw is how chart reading sticks.
+            </p>
+            <div className="mt-4 flex flex-col gap-4">
+              <div>
+                <Label className="text-xs">Confidence (1–5)</Label>
+                <div className="mt-2 flex gap-2">
+                  {([1, 2, 3, 4, 5] as const).map((n) => (
+                    <Button
+                      key={n}
+                      type="button"
+                      size="sm"
+                      variant={confidence === n ? "default" : "outline"}
+                      onClick={() => setConfidence(n)}
+                    >
+                      {n}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="training-note" className="text-xs">
+                  Personal note
+                </Label>
+                <Textarea
+                  id="training-note"
+                  className="mt-2"
+                  placeholder="What did this drill teach you about reading the chart?"
+                  value={personalNote}
+                  onChange={(e) => setPersonalNote(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              <Button className="w-fit" onClick={handleSaveJournal}>
+                Save Reflection
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {journalSaved && (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+            <p className="font-medium text-primary">Saved to journal</p>
+            <Button
+              className="mt-3"
+              size="sm"
+              variant="outline"
+              render={<Link href="/journal" />}
+            >
+              <BookOpenIcon data-icon="inline-start" />
+              View Journal
+            </Button>
+          </div>
+        )}
 
         {hasHistory && (
           <div className="rounded-xl border border-border/60 bg-card/50 p-6">
@@ -284,6 +275,12 @@ export function TrainingContent() {
             </div>
           </div>
         )}
+
+        <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-muted-foreground/70">
+          <InfoIcon className="mt-0.5 size-3 shrink-0" />
+          Educational simulation only. Not financial advice or a trade
+          recommendation.
+        </p>
       </div>
     </AppShell>
   )
