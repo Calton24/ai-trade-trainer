@@ -1,21 +1,54 @@
-# Next.js template
+# TradeTrainer AI
 
-This is a Next.js template with shadcn/ui.
+The Codecademy-style platform for learning trading step by step.
 
-## Adding components
+> **Educational simulator only.** No financial advice, trading signals, or profit guarantees.
 
-To add components to your app, run the following command:
+## Product Promise
+
+**"Learn trading by doing interactive chart drills."**
+
+## Getting Started
 
 ```bash
-npx shadcn@latest add button
+cd trade-trainer-ai
+npm install
+npm run dev
 ```
 
-This will place the ui components in the `components` directory.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Using components
+## MVP Features
 
-To use the components in your app, import them as follows:
+| Area | Route | Description |
+|------|-------|-------------|
+| Learning Path | `/learn` | 8 beginner modules with lessons, quizzes, XP |
+| Lessons | `/learn/[lessonId]` | Interactive lesson pages with chart examples |
+| Chart Drills | `/training` | 6 drill types with mock AI feedback |
+| Dashboard | `/dashboard` | Level, XP, streak, badges, recommendations |
+| Progress | `/progress` | XP, accuracy, mistakes, badge collection |
+| Journal | `/journal` | Beginner reflections with confidence ratings |
+| Community | `/community` | Preview feed + Discord waitlist |
+| Pricing | `/pricing` | Free / Pro / Lifetime tiers |
 
-```tsx
-import { Button } from "@/components/ui/button";
-```
+## Mock Data
+
+All data lives in `lib/mock/`:
+
+- `modules.ts` — 8 curriculum modules
+- `lessons.ts` — lesson content, quizzes, XP rewards
+- `drills.ts` — 6 chart drill types
+- `badges.ts` — achievement badges
+- `journal-entries.ts` — practice reflections
+- `community-posts.ts` — community preview posts
+- `user-progress.ts` — XP, level, streak state
+
+## Wiring Up Services
+
+See `.env.example` for required keys. Schema in `supabase/migrations/001_initial_schema.sql` includes:
+
+`profiles`, `modules`, `lessons`, `lesson_progress`, `drill_sessions`, `ai_reviews`, `journal_entries`, `badges`, `user_badges`, `community_waitlist`
+
+## Disclaimer
+
+TradeTrainer AI is an educational simulator. It does not provide financial advice, trading signals, or profit guarantees.
