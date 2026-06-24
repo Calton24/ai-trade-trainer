@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { RotateCcwIcon, TrophyIcon } from "lucide-react"
 
+import { WeeklyTargetWidget } from "@/components/habits/weekly-target-widget"
 import { AppShell } from "@/components/layout/app-shell"
 import { useUserState } from "@/components/providers/user-state-provider"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -10,17 +11,24 @@ import { StatCard } from "@/components/shared/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { badgeDefinitions } from "@/lib/mock-data"
+import { badgeDefinitions } from "@/lib/mock/badges"
 import { getLevelTitle, getXpProgressPercent } from "@/lib/user-state"
 import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react"
 
 export function ProgressContent() {
-  const { stats, state, hasBadge, reset } = useUserState()
+  const {
+    stats,
+    state,
+    hasBadge,
+    bookLabStats,
+    flashcardStats,
+    trendSpotterStats,
+    strategyWikiStats,
+    globalSnapshot,
+    reset,
+  } = useUserState()
   const xpPercent = getXpProgressPercent(state.progress)
-  const isNewUser =
-    state.lessonProgress.length === 0 &&
-    state.quizAttempts.length === 0 &&
-    state.drillSessions.length === 0
+  const isNewUser = globalSnapshot.totalActivities === 0
 
   return (
     <AppShell>
@@ -64,20 +72,53 @@ export function ProgressContent() {
               </p>
             </div>
             <p className="text-sm text-muted-foreground">
-              {stats.streak > 0
-                ? `🔥 ${stats.streak}-day streak`
+              {globalSnapshot.dailyStreak > 0
+                ? `${globalSnapshot.dailyStreak}-day streak`
                 : "No streak yet — practice today to start one"}
             </p>
           </div>
           <Progress value={xpPercent} className="mt-4 h-2" />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {!isNewUser && (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-border/60 bg-card/50 p-6">
+              <WeeklyTargetWidget />
+              {globalSnapshot.weeklyStreak > 0 && (
+                <p className="mt-3 text-xs text-primary">
+                  {globalSnapshot.weeklyStreak}-week streak
+                </p>
+              )}
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card/50 p-6">
+              <p className="text-sm font-medium">Recent activity</p>
+              <ul className="mt-3 flex flex-col gap-2">
+                {state.activityLog.slice(0, 6).map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex items-center justify-between text-xs text-muted-foreground"
+                  >
+                    <span>{a.title}</span>
+                    <span className="capitalize">{a.source}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Lessons Completed"
             value={String(stats.lessonsCompleted)}
             subtext={`of ${stats.totalLessons} available`}
             trend={stats.lessonsCompleted > 0 ? "up" : "neutral"}
+          />
+          <StatCard
+            label="Book Lab"
+            value={`${bookLabStats.conceptsCompleted}/${bookLabStats.totalConcepts}`}
+            subtext="Concepts completed"
+            trend={bookLabStats.conceptsCompleted > 0 ? "up" : "neutral"}
           />
           <StatCard
             label="Quizzes Completed"
@@ -99,7 +140,171 @@ export function ProgressContent() {
             }
             trend={stats.drillsCompleted > 0 ? "up" : "neutral"}
           />
+          <StatCard
+            label="Flashcards"
+            value={
+              flashcardStats.totalReviewed > 0
+                ? `${flashcardStats.masteredCount} mastered`
+                : "—"
+            }
+            subtext={
+              flashcardStats.totalReviewed > 0
+                ? `${flashcardStats.totalReviewed} reviewed · ${flashcardStats.sessionsCompleted} sessions`
+                : "No flashcard sessions yet"
+            }
+            trend={flashcardStats.totalReviewed > 0 ? "up" : "neutral"}
+          />
+          <StatCard
+            label="Trend Spotter"
+            value={
+              trendSpotterStats.lessonsCompleted > 0 ||
+              trendSpotterStats.exercisesCompleted > 0
+                ? `${trendSpotterStats.classificationAccuracy}%`
+                : "—"
+            }
+            subtext={
+              trendSpotterStats.lessonsCompleted > 0
+                ? `${trendSpotterStats.lessonsCompleted} lessons · ${trendSpotterStats.exercisesCompleted} exercises`
+                : "Train trend recognition"
+            }
+            trend={
+              trendSpotterStats.exercisesCompleted > 0 ? "up" : "neutral"
+            }
+          />
+          <StatCard
+            label="Strategy Wiki"
+            value={
+              strategyWikiStats.practiceSessions > 0 ||
+              strategyWikiStats.lessonsCompleted > 0
+                ? strategyWikiStats.averageScore > 0
+                  ? `${strategyWikiStats.averageScore}%`
+                  : `${strategyWikiStats.lessonsCompleted} read`
+                : "—"
+            }
+            subtext={
+              strategyWikiStats.practiceSessions > 0
+                ? `${strategyWikiStats.practiceSessions} drills · ${strategyWikiStats.strategiesStarted}/${strategyWikiStats.totalStrategies} started`
+                : strategyWikiStats.lessonsCompleted > 0
+                  ? `${strategyWikiStats.lessonsCompleted} playbooks read`
+                  : "Learn setups step by step"
+            }
+            trend={
+              strategyWikiStats.practiceSessions > 0 ? "up" : "neutral"
+            }
+          />
         </div>
+
+        {(strategyWikiStats.practiceSessions > 0 ||
+          strategyWikiStats.lessonsCompleted > 0) && (
+          <div className="rounded-xl border border-border/60 bg-card/50 p-6">
+            <p className="text-sm font-medium">Strategy Wiki</p>
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <span>
+                {strategyWikiStats.lessonsCompleted} playbook
+                {strategyWikiStats.lessonsCompleted === 1 ? "" : "s"} read
+              </span>
+              <span>
+                {strategyWikiStats.practiceSessions} practice session
+                {strategyWikiStats.practiceSessions === 1 ? "" : "s"}
+              </span>
+              {strategyWikiStats.challengeSessions > 0 && (
+                <span>
+                  {strategyWikiStats.challengeSessions} challenge
+                  {strategyWikiStats.challengeSessions === 1 ? "" : "s"}
+                </span>
+              )}
+              {strategyWikiStats.strategiesMastered > 0 && (
+                <span className="text-primary">
+                  {strategyWikiStats.strategiesMastered} mastered
+                </span>
+              )}
+              {strategyWikiStats.weakestStrategyTitle && (
+                <span>Weakest: {strategyWikiStats.weakestStrategyTitle}</span>
+              )}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                render={
+                  <Link
+                    href={
+                      strategyWikiStats.recommendedStrategySlug
+                        ? `/strategy-wiki/${strategyWikiStats.recommendedStrategySlug}/practice`
+                        : "/strategy-wiki"
+                    }
+                  />
+                }
+              >
+                {strategyWikiStats.recommendedStrategyTitle
+                  ? `Practise ${strategyWikiStats.recommendedStrategyTitle}`
+                  : "Open Strategy Wiki"}
+              </Button>
+              {strategyWikiStats.recommendedStrategySlug && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  render={
+                    <Link
+                      href={`/strategy-wiki/${strategyWikiStats.recommendedStrategySlug}/challenge`}
+                    />
+                  }
+                >
+                  10-scenario challenge
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {(trendSpotterStats.lessonsCompleted > 0 ||
+          trendSpotterStats.exercisesCompleted > 0) && (
+          <div className="rounded-xl border border-border/60 bg-card/50 p-6">
+            <p className="text-sm font-medium">Trend Spotter</p>
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <span>
+                {trendSpotterStats.challengesCompleted} challenge
+                {trendSpotterStats.challengesCompleted === 1 ? "" : "s"}
+              </span>
+              {trendSpotterStats.weakestType && (
+                <span className="capitalize">
+                  Weakest: {trendSpotterStats.weakestType}
+                </span>
+              )}
+              {trendSpotterStats.strongestType && (
+                <span className="capitalize">
+                  Strongest: {trendSpotterStats.strongestType}
+                </span>
+              )}
+            </div>
+            <Button
+              className="mt-4"
+              size="sm"
+              render={<Link href="/trend-spotter/challenge" />}
+            >
+              10-chart challenge
+            </Button>
+          </div>
+        )}
+
+        {flashcardStats.totalReviewed > 0 && (
+          <div className="rounded-xl border border-border/60 bg-card/50 p-6">
+            <p className="text-sm font-medium">Flashcard recall</p>
+            <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <span>{flashcardStats.dueCount} due today</span>
+              <span>{flashcardStats.weakCount} weak areas</span>
+              <span>
+                {flashcardStats.masteredCount}/{flashcardStats.totalCards} mastered
+              </span>
+            </div>
+            <Button
+              className="mt-4"
+              size="sm"
+              render={<Link href="/flashcards/session?mode=game10" />}
+            >
+              Start 10-card review
+            </Button>
+          </div>
+        )}
 
         {stats.drillsCompleted > 0 && (
           <div className="grid gap-6 lg:grid-cols-2">

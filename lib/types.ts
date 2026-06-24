@@ -204,6 +204,9 @@ export interface JournalEntry {
   mistakeTag: string
   personalNote: string
   createdAt: string
+  source?: "book-lab" | "training" | "reflection" | "course" | "strategy-wiki"
+  conceptTitle?: string
+  drillType?: string
 }
 
 export interface CommunityPost {

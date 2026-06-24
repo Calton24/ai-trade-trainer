@@ -8,6 +8,7 @@ import {
   BrainIcon,
   ClockIcon,
   LockIcon,
+  MapIcon,
   PenLineIcon,
 } from "lucide-react"
 
@@ -44,7 +45,7 @@ const statusLabels: Record<string, string> = {
 }
 
 export function PathDetailContent({ path }: PathDetailContentProps) {
-  const { pathProgress, startLearningPath } = useUserState()
+  const { pathProgress, startLearningPath, learningMapStats } = useUserState()
   const progress = pathProgress(path.id)
   const hasProgress = progress > 0
   const firstLesson = getFirstLesson(path.id)
@@ -86,6 +87,28 @@ export function PathDetailContent({ path }: PathDetailContentProps) {
             <p className="max-w-2xl text-lg text-muted-foreground">
               {path.description}
             </p>
+          </div>
+
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-primary">
+                  <MapIcon className="size-4" />
+                  <span className="text-sm font-medium">Guided path</span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Stage {learningMapStats.currentStageOrder} of {learningMapStats.totalStages}
+                  {learningMapStats.currentStageTitle
+                    ? ` — ${learningMapStats.currentStageTitle}`
+                    : ""}
+                  . The Learning Map shows what to study first and what unlocks next.
+                </p>
+              </div>
+              <Button size="sm" render={<Link href="/learning-map" />}>
+                Open Learning Map
+                <ArrowRightIcon data-icon="inline-end" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">

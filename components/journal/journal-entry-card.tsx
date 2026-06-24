@@ -39,6 +39,12 @@ export function JournalEntryCard({ entry }: JournalEntryCardProps) {
         </Badge>
       </div>
 
+      {entry.source === "book-lab" && (
+        <Badge variant="outline" className="w-fit text-xs">
+          Book Lab · {entry.conceptTitle ?? entry.setupPracticed}
+        </Badge>
+      )}
+
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">
           What you marked

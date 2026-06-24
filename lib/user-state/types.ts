@@ -1,4 +1,8 @@
 import type { AIReview, JournalEntry, TradeMark } from "@/lib/types"
+import type { StoredFlashcardState } from "@/lib/flashcards/types"
+import type { StoredStrategyWikiState } from "@/lib/strategy-wiki/types"
+import type { StoredTrendSpotterState } from "@/lib/trend-spotter/types"
+import type { StoredTraderReadinessState } from "@/lib/trader-readiness/types"
 
 export interface StoredLessonProgress {
   lessonId: string
@@ -25,6 +29,50 @@ export interface StoredDrillSession {
   completedAt: string
 }
 
+export interface StoredBookQuizAttempt {
+  id: string
+  conceptId: string
+  score: number
+  passed: boolean
+  completedAt: string
+}
+
+export interface StoredBookPracticeDrill {
+  id: string
+  conceptId: string
+  drillId: string
+  score: number
+  completedAt: string
+}
+
+export interface StoredBookReflection {
+  id: string
+  conceptId: string
+  conceptTitle: string
+  note: string
+  confidenceRating: 1 | 2 | 3 | 4 | 5
+  mistakeTag: string
+  completedAt: string
+}
+
+export interface StoredBookLabProgress {
+  completedConceptIds: string[]
+  quizAttempts: StoredBookQuizAttempt[]
+  practiceDrills: StoredBookPracticeDrill[]
+  reflections: StoredBookReflection[]
+  bookLabXP: number
+}
+
+export function getInitialBookLabProgress(): StoredBookLabProgress {
+  return {
+    completedConceptIds: [],
+    quizAttempts: [],
+    practiceDrills: [],
+    reflections: [],
+    bookLabXP: 0,
+  }
+}
+
 export interface StoredUserProgress {
   level: number
   xp: number
@@ -35,6 +83,89 @@ export interface StoredUserProgress {
   pathProgress: Record<string, number>
 }
 
+export type ActivityType =
+  | "lesson-complete"
+  | "quiz-complete"
+  | "book-concept-complete"
+  | "chart-drill-complete"
+  | "chart-lab-complete"
+  | "journal-reflection"
+  | "practice-complete"
+  | "interactive-question"
+  | "flashcard-session"
+  | "trend-lesson-complete"
+  | "trend-exercise-complete"
+  | "trend-challenge-complete"
+  | "strategy-lesson-complete"
+  | "strategy-practice-complete"
+  | "strategy-challenge-complete"
+  | "readiness-assessment-complete"
+  | "readiness-pillar-complete"
+
+export type ActivitySource =
+  | "paths"
+  | "book-lab"
+  | "training"
+  | "chart-lab"
+  | "quiz"
+  | "journal"
+  | "flashcards"
+  | "trend-spotter"
+  | "strategy-wiki"
+  | "trader-readiness"
+
+export interface ActivityLogItem {
+  id: string
+  type: ActivityType
+  source: ActivitySource
+  title: string
+  entityId: string
+  xpAwarded: number
+  completedAt: string
+  dateKey: string
+  weekKey: string
+}
+
+export interface WeeklyTargetState {
+  daysPerWeek: number | null
+  setAt: string | null
+}
+
+export interface WeeklyStreakState {
+  streak: number
+  activeDaysByWeek: Record<string, string[]>
+  lastEvaluatedWeekKey: string | null
+}
+
+export interface LearningActivityInput {
+  type: ActivityType
+  source: ActivitySource
+  title: string
+  entityId: string
+  xpAwarded?: number
+}
+
+export type MotivationEvent =
+  | { type: "streak-started"; streak: number }
+  | { type: "streak-continued"; streak: number }
+  | { type: "weekly-target-hit"; weeksStreak: number }
+  | { type: "weekly-target-prompt" }
+  | { type: "badge-unlocked"; badgeId: string; badgeName: string }
+
+export interface StoredLearningMapState {
+  foundationCelebrated: boolean
+  manuallyCompletedNodes: string[]
+  previewedNodes: string[]
+}
+
+export function getInitialLearningMapState(): StoredLearningMapState {
+  return {
+    foundationCelebrated: false,
+    manuallyCompletedNodes: [],
+    previewedNodes: [],
+  }
+}
+
 export interface UserState {
   progress: StoredUserProgress
   lessonProgress: StoredLessonProgress[]
@@ -42,6 +173,15 @@ export interface UserState {
   drillSessions: StoredDrillSession[]
   journalEntries: JournalEntry[]
   earnedBadgeIds: string[]
+  bookLab: StoredBookLabProgress
+  activityLog: ActivityLogItem[]
+  weeklyTarget: WeeklyTargetState
+  weeklyStreak: WeeklyStreakState
+  flashcards: StoredFlashcardState
+  trendSpotter: StoredTrendSpotterState
+  strategyWiki: StoredStrategyWikiState
+  learningMap: StoredLearningMapState
+  traderReadiness: StoredTraderReadinessState
 }
 
 export const STORAGE_KEYS = {
@@ -51,4 +191,22 @@ export const STORAGE_KEYS = {
   drillSessions: "tradetrainer_drill_sessions",
   journalEntries: "tradetrainer_journal_entries",
   badges: "tradetrainer_user_badges",
+  bookLab: "tradetrainer_book_lab",
+  activityLog: "tradetrainer_activity_log",
+  weeklyTarget: "tradetrainer_weekly_target",
+  weeklyStreak: "tradetrainer_weekly_streak",
+  flashcardProgress: "tradetrainer_flashcard_progress",
+  flashcardSessions: "tradetrainer_flashcard_sessions",
+  trendSpotterProgress: "tradetrainer_trend_spotter_progress",
+  trendSpotterSessions: "tradetrainer_trend_spotter_sessions",
+  trendChallengeAttempts: "tradetrainer_trend_challenge_attempts",
+  strategyProgress: "tradetrainer_strategy_progress",
+  strategySessions: "tradetrainer_strategy_sessions",
+  strategyChallenges: "tradetrainer_strategy_challenges",
+  learningMapProgress: "tradetrainer_learning_map_progress",
+  unlockedNodes: "tradetrainer_unlocked_nodes",
+  completedNodes: "tradetrainer_completed_nodes",
+  stageProgress: "tradetrainer_stage_progress",
+  masteryScores: "tradetrainer_mastery_scores",
+  traderReadiness: "tradetrainer_trader_readiness",
 } as const

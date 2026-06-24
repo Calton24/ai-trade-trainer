@@ -22,6 +22,7 @@ import {
 import { TIMEFRAMES, type Timeframe } from "@/lib/charts/types"
 import type {
   ChartPoint,
+  ChartConcept,
   ChartScenario,
   ChartScoreResult,
   MarkerTool,
@@ -31,6 +32,15 @@ import { cn } from "@/lib/utils"
 
 export const CHART_DISCLAIMER =
   "Educational simulation only. Not financial advice or a trade recommendation."
+
+const TREND_RELATED_CONCEPTS: ChartConcept[] = [
+  "trend",
+  "swing-high-low",
+  "fakeout",
+  "icc-indication",
+  "icc-correction",
+  "icc-continuation",
+]
 
 interface ChartLabWorkspaceProps {
   scenario: ChartScenario
@@ -232,7 +242,14 @@ export function ChartLabWorkspace({
         </div>
       )}
 
-      {result && <ChartFeedback result={result} />}
+      {result && (
+        <ChartFeedback
+          result={result}
+          showTrendSpotterCTA={
+            !result.passed && TREND_RELATED_CONCEPTS.includes(scenario.concept)
+          }
+        />
+      )}
 
       <div className="flex flex-wrap gap-2">
         {!result ? (

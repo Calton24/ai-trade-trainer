@@ -227,6 +227,79 @@ const SCENARIO_META: ScenarioMeta[] = [
       "Risk is the distance from entry to stop. Reward is the distance from entry to target. A 1:2 setup risks one unit to make two.",
     hints: ["Reward distance should be at least twice the risk distance."],
   },
+  {
+    id: "demo-bull-flag",
+    kind: "icc-bullish",
+    seed: "bull-flag-demo",
+    title: "Bull flag pattern",
+    description: "A sharp push up, then a tight sideways flag before continuation.",
+    concept: "icc-continuation",
+    explanation:
+      "A bull flag shows strong momentum (the pole), a brief pause or drift (the flag), then a breakout continuation. Stops often sit below the flag low.",
+    hints: [
+      "The flag should be tighter and shallower than the initial push.",
+      "Look for the continuation after price leaves the flag.",
+    ],
+    keepAnnotationIds: ["ind", "corr", "cont"],
+  },
+  {
+    id: "demo-vwap-bounce",
+    kind: "support-bounce",
+    seed: "vwap-bounce-demo",
+    title: "VWAP bounce (educational)",
+    description: "Price pulls back to a session average zone and buyers step in.",
+    concept: "support",
+    explanation:
+      "On active tickers, VWAP acts like a dynamic average. A bounce off VWAP with volume can signal buyers defending — but context matters; dead charts rarely respect it.",
+    hints: ["The bounce should show rejection wicks and a green follow-through candle."],
+  },
+  {
+    id: "demo-vwap-rejection",
+    kind: "resistance-rejection",
+    seed: "vwap-reject-demo",
+    title: "VWAP rejection (educational)",
+    description: "Price rallies into VWAP from below and gets sold into.",
+    concept: "resistance",
+    explanation:
+      "When price is below VWAP, a rally into it can fail as sellers defend the average. Rejection wicks and red closes are clues — not guarantees.",
+    hints: ["Look for upper wicks and failure to hold above the level."],
+  },
+  {
+    id: "demo-relative-volume",
+    kind: "breakout",
+    seed: "rel-vol-demo",
+    title: "High relative volume move",
+    description: "A breakout with unusually active participation.",
+    concept: "breakout",
+    explanation:
+      "Relative volume compares today's activity to the recent average. Spikes often accompany news, gaps, and breakouts — the kind of action day traders watch.",
+    hints: ["Volume expansion often accompanies the breakout candle."],
+  },
+  {
+    id: "demo-chasing-late-entry",
+    kind: "uptrend",
+    seed: "chase-demo",
+    title: "Chasing a late entry",
+    description: "Price already extended — poor R:R for new longs.",
+    concept: "trend",
+    explanation:
+      "After a large vertical move, entries far from support offer tight stops and poor reward. Patient traders wait for pullbacks or skip.",
+    hints: [
+      "Notice how far price is from the last higher low.",
+      "Late entries often have stops inside normal noise.",
+    ],
+  },
+  {
+    id: "demo-opening-range",
+    kind: "breakout",
+    seed: "orb-demo",
+    title: "Opening range breakout",
+    description: "Price breaks the first minutes' high or low with volume.",
+    concept: "breakout",
+    explanation:
+      "The opening range is the high/low of the first 5–15 minutes. A clean break with volume can start a trend day — failed breaks often reverse fast.",
+    hints: ["Mark the range high before the breakout candle."],
+  },
 
   // ---- Interactive lab tasks ----
   {

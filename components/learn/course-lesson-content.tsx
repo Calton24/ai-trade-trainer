@@ -6,6 +6,7 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ClockIcon,
+  LayersIcon,
   SparklesIcon,
 } from "lucide-react"
 
@@ -22,6 +23,7 @@ import {
   getPreviousLesson,
   TIME_ESTIMATE_NOTE,
 } from "@/lib/course"
+import { getDeckSlugForPath, getFlashcardSessionHref } from "@/lib/flashcards/deck-map"
 import type { CourseLesson, CourseModule, LearningPathContent } from "@/lib/course/types"
 
 interface CourseLessonContentProps {
@@ -75,6 +77,8 @@ export function CourseLessonContent({
   }
 
   const showXpBanner = justCompleted && !completed
+  const flashcardDeck = getDeckSlugForPath(path.slug)
+  const flashcardHref = getFlashcardSessionHref(flashcardDeck)
 
   return (
     <div className="flex flex-col gap-8">
@@ -186,13 +190,28 @@ export function CourseLessonContent({
       )}
 
       {showXpBanner && (
-        <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-          <SparklesIcon className="text-primary" />
-          <p className="text-sm">
-            <span className="font-medium text-primary">
-              +{lesson.xpReward} XP earned!
-            </span>
-          </p>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <SparklesIcon className="text-primary" />
+            <p className="text-sm">
+              <span className="font-medium text-primary">
+                +{lesson.xpReward} XP earned!
+              </span>
+            </p>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-card/50 p-4">
+            <div className="flex items-center gap-2 text-primary">
+              <LayersIcon className="size-4" />
+              <p className="text-sm font-medium">Lock in what you learned</p>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review 10 flashcards from this concept to strengthen recall.
+            </p>
+            <Button className="mt-3" size="sm" render={<Link href={flashcardHref} />}>
+              Start 10-card review
+              <ArrowRightIcon data-icon="inline-end" />
+            </Button>
+          </div>
         </div>
       )}
 

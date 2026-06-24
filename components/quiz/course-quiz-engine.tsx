@@ -103,9 +103,6 @@ export function CourseQuizEngine({
   if (finished) {
     const score = Math.round((correctCount / quiz.questions.length) * 100)
     const passed = score >= quiz.passingScore
-    const missed = quiz.questions.filter(
-      (_, i) => i >= 0 && i < quiz.questions.length
-    )
 
     return (
       <div className="flex flex-col gap-6">
@@ -144,15 +141,21 @@ export function CourseQuizEngine({
           )}
         </div>
 
-        {!passed && missed.length > 0 && (
+        {!passed && (
           <div className="rounded-xl border border-border/60 bg-card/50 p-4">
-            <p className="text-sm font-medium">Study next</p>
+            <p className="text-sm font-medium">Practise missed concepts</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Review{" "}
-              {quiz.questions.find((q) => q.relatedConcept)?.relatedConcept ??
-                "the lesson material"}{" "}
-              and retake when ready.
+              Review flashcards for the topics you missed on this quiz.
             </p>
+            <Button
+              className="mt-3"
+              size="sm"
+              variant="outline"
+              render={<Link href="/flashcards/session?mode=weak" />}
+            >
+              Practise with flashcards
+              <ArrowRightIcon data-icon="inline-end" />
+            </Button>
           </div>
         )}
 

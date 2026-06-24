@@ -1,20 +1,27 @@
 "use client"
 
+import Link from "next/link"
 import {
   CheckCircle2Icon,
   LightbulbIcon,
   SparklesIcon,
+  TrendingUpIcon,
   XCircleIcon,
 } from "lucide-react"
 
 import type { ChartScoreResult } from "@/lib/charts/types"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface ChartFeedbackProps {
   result: ChartScoreResult
+  showTrendSpotterCTA?: boolean
 }
 
-export function ChartFeedback({ result }: ChartFeedbackProps) {
+export function ChartFeedback({
+  result,
+  showTrendSpotterCTA = false,
+}: ChartFeedbackProps) {
   return (
     <div
       className={cn(
@@ -71,6 +78,27 @@ export function ChartFeedback({ result }: ChartFeedbackProps) {
         <div className="flex items-center gap-2 text-sm text-primary">
           <SparklesIcon className="size-4" />
           <span>You can now spot this pattern on a live chart.</span>
+        </div>
+      )}
+
+      {!result.passed && showTrendSpotterCTA && (
+        <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-background/40 p-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <TrendingUpIcon className="size-4 text-primary" />
+            Strengthen trend reading
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Trend Spotter drills help you classify uptrend, downtrend, range, and
+            messy charts before planning entries.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-fit"
+            render={<Link href="/trend-spotter" />}
+          >
+            Open Trend Spotter
+          </Button>
         </div>
       )}
     </div>

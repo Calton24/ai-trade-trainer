@@ -19,7 +19,50 @@ import type {
   StoredUserProgress,
   UserState,
 } from "./types"
-import { STORAGE_KEYS } from "./types"
+import {
+  getInitialBookLabProgress,
+  getInitialLearningMapState,
+  STORAGE_KEYS,
+} from "./types"
+import {
+  getInitialFlashcardState,
+  computeFlashcardStats,
+  completeFlashcardSession,
+  recordFlashcardReview,
+} from "./flashcards"
+import {
+  getInitialTrendSpotterState,
+  computeTrendSpotterStats,
+  completeTrendLesson,
+  recordTrendExerciseAttempt,
+  recordTrendChallengeAttempt,
+  isTrendLessonCompleted,
+} from "./trend-spotter"
+import {
+  getInitialStrategyWikiState,
+  computeStrategyWikiStats,
+  completeStrategyLesson,
+  recordStrategyPracticeAttempt,
+  recordStrategyChallengeAttempt,
+  isStrategyLessonCompleted,
+} from "./strategy-wiki"
+import {
+  getInitialTraderReadinessState,
+  computeTraderReadinessStats,
+  recordReadinessAssessment,
+  recordPillarScore,
+} from "./trader-readiness"
+import {
+  calculateDailyStreak,
+  calculateWeeklyTargetProgress,
+  getGlobalProgressSnapshot,
+  getInitialWeeklyStreak,
+  getInitialWeeklyTarget,
+  getTodayActivity,
+  hasMadeProgressToday,
+  recordLearningActivity,
+  setWeeklyTarget as setWeeklyTargetState,
+} from "./activity"
 
 export function getInitialProgress(): StoredUserProgress {
   return {
@@ -62,6 +105,27 @@ export function loadUserState(): UserState {
     ),
     journalEntries: readJson<JournalEntry[]>(STORAGE_KEYS.journalEntries, []),
     earnedBadgeIds: readJson<string[]>(STORAGE_KEYS.badges, []),
+    bookLab: readJson(STORAGE_KEYS.bookLab, getInitialBookLabProgress()),
+    activityLog: readJson(STORAGE_KEYS.activityLog, []),
+    weeklyTarget: readJson(STORAGE_KEYS.weeklyTarget, getInitialWeeklyTarget()),
+    weeklyStreak: readJson(STORAGE_KEYS.weeklyStreak, getInitialWeeklyStreak()),
+    flashcards: readJson(STORAGE_KEYS.flashcardProgress, getInitialFlashcardState()),
+    trendSpotter: readJson(
+      STORAGE_KEYS.trendSpotterProgress,
+      getInitialTrendSpotterState()
+    ),
+    strategyWiki: readJson(
+      STORAGE_KEYS.strategyProgress,
+      getInitialStrategyWikiState()
+    ),
+    learningMap: readJson(
+      STORAGE_KEYS.learningMapProgress,
+      getInitialLearningMapState()
+    ),
+    traderReadiness: readJson(
+      STORAGE_KEYS.traderReadiness,
+      getInitialTraderReadinessState()
+    ),
   }
 }
 
@@ -72,6 +136,26 @@ export function saveUserState(state: UserState) {
   writeJson(STORAGE_KEYS.drillSessions, state.drillSessions)
   writeJson(STORAGE_KEYS.journalEntries, state.journalEntries)
   writeJson(STORAGE_KEYS.badges, state.earnedBadgeIds)
+  writeJson(STORAGE_KEYS.bookLab, state.bookLab)
+  writeJson(STORAGE_KEYS.activityLog, state.activityLog)
+  writeJson(STORAGE_KEYS.weeklyTarget, state.weeklyTarget)
+  writeJson(STORAGE_KEYS.weeklyStreak, state.weeklyStreak)
+  writeJson(STORAGE_KEYS.flashcardProgress, state.flashcards)
+  writeJson(STORAGE_KEYS.flashcardSessions, state.flashcards.sessions)
+  writeJson(STORAGE_KEYS.trendSpotterProgress, state.trendSpotter)
+  writeJson(STORAGE_KEYS.trendSpotterSessions, {
+    exercises: state.trendSpotter.exerciseAttempts,
+    challenges: state.trendSpotter.challengeAttempts,
+  })
+  writeJson(
+    STORAGE_KEYS.trendChallengeAttempts,
+    state.trendSpotter.challengeAttempts
+  )
+  writeJson(STORAGE_KEYS.strategyProgress, state.strategyWiki)
+  writeJson(STORAGE_KEYS.strategySessions, state.strategyWiki.practiceAttempts)
+  writeJson(STORAGE_KEYS.strategyChallenges, state.strategyWiki.challengeAttempts)
+  writeJson(STORAGE_KEYS.learningMapProgress, state.learningMap)
+  writeJson(STORAGE_KEYS.traderReadiness, state.traderReadiness)
 }
 
 export function resetUserProgress() {
@@ -83,34 +167,39 @@ function xpForLevel(level: number) {
   return level * 100
 }
 
-function updateStreak(progress: StoredUserProgress): StoredUserProgress {
-  const today = new Date().toISOString().slice(0, 10)
-  if (progress.lastActivityDate === today) return progress
-
-  let streak = progress.streak
-  if (progress.lastActivityDate) {
-    const last = new Date(progress.lastActivityDate)
-    const now = new Date(today)
-    const diffDays = Math.floor(
-      (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24)
-    )
-    streak = diffDays === 1 ? streak + 1 : 1
-  } else {
-    streak = 1
-  }
-
-  return { ...progress, streak, lastActivityDate: today }
-}
-
 export function awardXP(state: UserState, amount: number): UserState {
-  let progress = updateStreak(state.progress)
+  const progress = state.progress
   const xp = progress.xp + amount
   let level = progress.level
   while (xp >= xpForLevel(level)) {
     level += 1
   }
-  progress = { ...progress, xp, level }
-  return evaluateBadges({ ...state, progress })
+  return evaluateBadges({
+    ...state,
+    progress: { ...progress, xp, level },
+  })
+}
+
+export function setWeeklyTarget(state: UserState, daysPerWeek: number) {
+  return setWeeklyTargetState(state, daysPerWeek)
+}
+
+export function recordChartLabComplete(
+  state: UserState,
+  scenarioId: string,
+  title: string,
+  score: number
+) {
+  const xp = Math.round(score / 10)
+  let next = awardXP(state, xp)
+  const { state: withActivity, events } = recordLearningActivity(next, {
+    type: "chart-lab-complete",
+    source: "chart-lab",
+    title,
+    entityId: scenarioId,
+    xpAwarded: xp,
+  })
+  return { state: withActivity, events }
 }
 
 function progressSnapshot(state: UserState): UserProgressSnapshot {
@@ -136,10 +225,7 @@ function recalcPathProgress(
 }
 
 export function startPath(state: UserState, pathId: string): UserState {
-  const progress = {
-    ...updateStreak(state.progress),
-    activePathId: pathId,
-  }
+  const progress = { ...state.progress, activePathId: pathId }
   const ids = state.lessonProgress.map((l) => l.lessonId)
   return { ...state, progress: recalcPathProgress(progress, pathId, ids) }
 }
@@ -152,6 +238,7 @@ export function completeLesson(
 ): UserState {
   if (state.lessonProgress.some((l) => l.lessonId === lessonId)) return state
 
+  const lesson = getLessonById(lessonId)
   let next = awardXP(state, xpReward)
   next = {
     ...next,
@@ -165,7 +252,6 @@ export function completeLesson(
     ],
   }
 
-  const lesson = getLessonById(lessonId)
   const resolvedPathId = pathId ?? lesson?.pathId
   if (resolvedPathId) {
     const ids = next.lessonProgress.map((l) => l.lessonId)
@@ -175,7 +261,15 @@ export function completeLesson(
     }
   }
 
-  return next
+  const { state: withActivity } = recordLearningActivity(next, {
+    type: "lesson-complete",
+    source: "paths",
+    title: lesson?.title ?? "Lesson",
+    entityId: lessonId,
+    xpAwarded: xpReward,
+  })
+
+  return withActivity
 }
 
 export function saveQuizAttempt(
@@ -184,6 +278,12 @@ export function saveQuizAttempt(
   pathId?: string,
   lessonId?: string
 ): UserState {
+  const isFirstPass =
+    attempt.passed &&
+    !state.quizAttempts.some(
+      (a) => a.quizId === attempt.quizId && a.passed
+    )
+
   let next: UserState = {
     ...state,
     quizAttempts: [
@@ -198,16 +298,26 @@ export function saveQuizAttempt(
 
   const quiz = getQuizById(attempt.quizId)
   const resolvedLessonId = lessonId ?? quiz?.lessonId
+  const xpToAward = isFirstPass ? attempt.xpEarned : Math.round(attempt.xpEarned / 4)
+
   if (attempt.passed && resolvedLessonId) {
     const lesson = getLessonById(resolvedLessonId)
     next = completeLesson(
       next,
       resolvedLessonId,
-      attempt.xpEarned,
+      xpToAward,
       pathId ?? lesson?.pathId
     )
-  } else if (attempt.passed && attempt.xpEarned > 0) {
-    next = awardXP(next, attempt.xpEarned)
+  } else if (attempt.passed && xpToAward > 0) {
+    next = awardXP(next, xpToAward)
+    const { state: withActivity } = recordLearningActivity(next, {
+      type: "quiz-complete",
+      source: "quiz",
+      title: quiz?.title ?? "Quiz",
+      entityId: attempt.quizId,
+      xpAwarded: xpToAward,
+    })
+    next = withActivity
   }
 
   return next
@@ -232,16 +342,21 @@ export function saveDrillSession(
 
   next = evaluateBadges(next)
 
+  const xp = Math.round(session.score / 10)
+
   if (lessonId) {
     const lesson = getLessonById(lessonId)
-    next = completeLesson(
-      next,
-      lessonId,
-      lesson?.xpReward ?? 60,
-      lesson?.pathId
-    )
+    next = completeLesson(next, lessonId, lesson?.xpReward ?? 60, lesson?.pathId)
   } else {
-    next = awardXP(next, Math.round(session.score / 10))
+    next = awardXP(next, xp)
+    const { state: withActivity } = recordLearningActivity(next, {
+      type: "chart-drill-complete",
+      source: "training",
+      title: session.drillTitle,
+      entityId: session.drillType,
+      xpAwarded: xp,
+    })
+    next = withActivity
   }
 
   return next
@@ -251,7 +366,7 @@ export function createJournalEntry(
   state: UserState,
   entry: Omit<JournalEntry, "id" | "createdAt">
 ): UserState {
-  return {
+  let next: UserState = {
     ...state,
     journalEntries: [
       {
@@ -262,12 +377,23 @@ export function createJournalEntry(
       ...state.journalEntries,
     ],
   }
+
+  const { state: withActivity } = recordLearningActivity(next, {
+    type: "journal-reflection",
+    source: "journal",
+    title: entry.setupPracticed || "Journal reflection",
+    entityId: entry.conceptTitle ?? entry.setupPracticed,
+    xpAwarded: 0,
+  })
+
+  return withActivity
 }
 
 export function evaluateBadges(state: UserState): UserState {
   const earned = new Set(state.earnedBadgeIds)
   const drillCount = state.drillSessions.length
   const lessonCount = state.lessonProgress.length
+  const weekly = calculateWeeklyTargetProgress(state)
 
   if (drillCount >= 1) earned.add("first-drill")
   if (
@@ -286,7 +412,139 @@ export function evaluateBadges(state: UserState): UserState {
   ) {
     earned.add("break-retest-beginner")
   }
-  if (state.progress.streak >= 7) earned.add("seven-day-streak")
+  if (calculateDailyStreak(state) >= 7) earned.add("seven-day-streak")
+  if (state.bookLab.completedConceptIds.length >= 5) earned.add("book-lab-reader")
+  if (state.activityLog.length >= 1) earned.add("first-learning-day")
+  if (weekly.met && weekly.hasTargetSet) earned.add("first-weekly-target")
+  if (weekly.completed >= 3 && weekly.hasTargetSet) earned.add("three-day-week")
+  if (state.weeklyStreak.streak >= 2) earned.add("two-week-streak")
+  if (state.weeklyStreak.streak >= 4) earned.add("four-week-streak")
+  if (state.weeklyStreak.streak >= 8) earned.add("eight-week-streak")
+  if (state.weeklyStreak.streak >= 12) {
+    earned.add("twelve-week-streak")
+    earned.add("consistent-trader")
+  }
+
+  const fc = state.flashcards
+  const fcStats = computeFlashcardStats(state)
+  if (fc.sessions.length >= 1) earned.add("first-flashcard-session")
+  if (fc.sessions.some((s) => s.mode === "game10" || s.cardsReviewed >= 10)) {
+    earned.add("ten-card-starter")
+  }
+  if (fc.sessions.some((s) => s.deckId.includes("chart"))) {
+    earned.add("chart-card-rookie")
+  }
+  if (fcStats.totalReviewed >= 50) earned.add("fifty-cards-reviewed")
+  if (fcStats.totalReviewed >= 100) earned.add("hundred-cards-reviewed")
+  if (fcStats.masteredCount >= 10) earned.add("ten-cards-mastered")
+  const riskReviews = Object.keys(fc.cardProgress).filter((id) =>
+    id.includes("risk-management")
+  ).length
+  if (riskReviews >= 5) earned.add("risk-recall")
+  const iccReviews = Object.keys(fc.cardProgress).filter((id) =>
+    id.includes("-icc-")
+  ).length
+  if (iccReviews >= 5) earned.add("icc-recall")
+  if (fc.sessions.length >= 4 && weekly.hasTargetSet) {
+    earned.add("weekly-review-habit")
+  }
+
+  const ts = state.trendSpotter
+  const tsStats = computeTrendSpotterStats(state)
+  if (ts.completedLessonIds.length >= 1) earned.add("first-trend-lesson")
+  if (ts.exerciseAttempts.length >= 1) earned.add("first-trend-exercise")
+  if (ts.completedLessonIds.length >= 4) earned.add("trend-spotter-rookie")
+  if (tsStats.strongestType === "uptrend" && ts.stats.uptrend.total >= 3) {
+    earned.add("uptrend-reader")
+  }
+  if (tsStats.strongestType === "downtrend" && ts.stats.downtrend.total >= 3) {
+    earned.add("downtrend-reader")
+  }
+  if (tsStats.strongestType === "range" && ts.stats.range.total >= 3) {
+    earned.add("range-detector")
+  }
+  if (
+    ts.exerciseAttempts.some(
+      (a) => a.tradeDecision === "skip" && a.totalScore >= 70
+    )
+  ) {
+    earned.add("clean-skip")
+  }
+  if (ts.challengeAttempts.some((a) => a.total >= 10)) {
+    earned.add("ten-chart-challenge")
+  }
+  if (tsStats.classificationAccuracy >= 80 && tsStats.exercisesCompleted >= 5) {
+    earned.add("eighty-trend-accuracy")
+  }
+  if (tsStats.classificationAccuracy >= 90 && tsStats.exercisesCompleted >= 10) {
+    earned.add("ninety-trend-accuracy")
+  }
+
+  const sw = state.strategyWiki
+  const swStats = computeStrategyWikiStats(sw)
+  if (sw.completedStrategyIds.length >= 1) earned.add("first-strategy-learned")
+  if (sw.practiceAttempts.length >= 1) earned.add("first-strategy-practice")
+  if (
+    sw.practiceAttempts.some((a) => a.strategyId === "break-retest")
+  ) {
+    earned.add("break-retest-rookie")
+  }
+  if (
+    sw.practiceAttempts.some(
+      (a) =>
+        a.strategyId === "support-bounce" ||
+        a.strategyId === "resistance-rejection"
+    )
+  ) {
+    earned.add("support-resistance-rookie")
+  }
+  if (sw.practiceAttempts.some((a) => a.strategyId === "icc")) {
+    earned.add("icc-rookie")
+  }
+  if (sw.practiceAttempts.length >= 10) earned.add("ten-strategy-drills")
+  if (
+    sw.practiceAttempts.some(
+      (a) =>
+        a.tradeDecision === "skip" && a.totalScore >= 70
+    )
+  ) {
+    earned.add("trade-or-skip-discipline")
+  }
+  if (swStats.averageScore >= 80 && sw.practiceAttempts.length >= 5) {
+    earned.add("eighty-strategy-accuracy")
+  }
+  if (
+    Object.values(sw.strategyProgress).some(
+      (p) =>
+        p.masteryLevel === "competent" ||
+        p.masteryLevel === "strong" ||
+        p.masteryLevel === "mastered"
+    )
+  ) {
+    earned.add("first-strategy-competent")
+  }
+  if (
+    Object.values(sw.strategyProgress).some((p) => p.masteryLevel === "mastered")
+  ) {
+    earned.add("first-strategy-mastered")
+  }
+
+  const tr = state.traderReadiness
+  if (tr.assessmentAttempts.length >= 1) earned.add("readiness-baseline")
+  if (tr.assessmentAttempts.length >= 3) earned.add("readiness-tracker")
+  if (tr.readinessXP >= 200) earned.add("readiness-dedicated")
+  const latest = tr.assessmentAttempts[0]
+  if (latest && latest.overallScore >= 80) earned.add("structured-trader")
+  if (latest && latest.overallScore >= 95) earned.add("elite-readiness")
+  if (latest && latest.pillarScores["risk-management"] >= 90) {
+    earned.add("risk-management-expert")
+  }
+  if (latest && latest.pillarScores.psychology >= 80) {
+    earned.add("psychology-warrior")
+  }
+  if (latest && latest.pillarScores["chart-reading"] >= 85) {
+    earned.add("chart-reader-level-10")
+  }
 
   return { ...state, earnedBadgeIds: [...earned] }
 }
@@ -377,4 +635,83 @@ export function isBadgeEarned(state: UserState, badgeId: string) {
   return state.earnedBadgeIds.includes(badgeId)
 }
 
-export type { UserState, StoredDrillSession, StoredQuizAttempt, StoredLessonProgress, StoredUserProgress } from "./types"
+export type { UserState, StoredDrillSession, StoredQuizAttempt, StoredLessonProgress, StoredUserProgress, StoredBookLabProgress } from "./types"
+
+export {
+  completeBookConcept,
+  computeBookLabStats,
+  getBookLabConceptProgressPercent,
+  isBookConceptCompleted,
+  recordBookPracticeDrill,
+  recordBookQuizAttempt,
+  saveBookReflection,
+} from "./book-lab"
+
+export {
+  computeFlashcardStats,
+  completeFlashcardSession,
+  recordFlashcardReview,
+  getInitialFlashcardState,
+} from "./flashcards"
+
+export {
+  computeTrendSpotterStats,
+  completeTrendLesson,
+  recordTrendExerciseAttempt,
+  recordTrendChallengeAttempt,
+  isTrendLessonCompleted,
+  getInitialTrendSpotterState,
+} from "./trend-spotter"
+
+export {
+  computeLearningMapStats,
+  getAllStageProgress,
+  getCurrentStageId,
+  getFeatureAccess,
+  getFoundationProgress,
+  getLockInfo,
+  getNodeAccessLevel,
+  getRecommendedNextAction,
+  getStageProgress,
+  isNodeComplete,
+  isStageCompleted,
+  isStageUnlocked,
+  markFoundationCelebrated,
+  shouldCelebrateFoundation,
+} from "@/lib/learning-map/unlocks"
+
+export {
+  computeStrategyWikiStats,
+  completeStrategyLesson,
+  recordStrategyPracticeAttempt,
+  recordStrategyChallengeAttempt,
+  isStrategyLessonCompleted,
+  getInitialStrategyWikiState,
+  getStrategyProgressRecord,
+  getRecentStrategySessions,
+  getContinuePractisingStrategy,
+} from "./strategy-wiki"
+
+export {
+  computeTraderReadinessStats,
+  recordReadinessAssessment,
+  recordPillarScore,
+  getInitialTraderReadinessState,
+  getLatestAssessment,
+} from "./trader-readiness"
+
+export {
+  calculateDailyStreak,
+  calculateWeeklyStreak,
+  calculateWeeklyTargetProgress,
+  getGlobalProgressSnapshot,
+  getTodayActivity,
+  hasMadeProgressToday,
+  recordLearningActivity,
+  getWeekDayLabels,
+  getWeekDayKeys,
+  extractMotivationEvents,
+  getDateKey,
+} from "./activity"
+
+export type { MotivationEvent, ActivityLogItem } from "./types"

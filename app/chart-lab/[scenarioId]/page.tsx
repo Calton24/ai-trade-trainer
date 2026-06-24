@@ -3,7 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeftIcon } from "lucide-react"
 
-import { ChartLabWorkspace } from "@/components/chart-lab/chart-lab-workspace"
+import { ChartLabPageClient } from "@/components/chart-lab/chart-lab-page-client"
 import { AppShell } from "@/components/layout/app-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -65,7 +65,7 @@ export default async function ChartLabPage({ params }: ChartLabPageProps) {
           </p>
         </div>
 
-        <ChartLabWorkspace scenario={scenario} variant="full" />
+        <ChartLabPageClient scenario={scenario} />
       </div>
     </AppShell>
   )

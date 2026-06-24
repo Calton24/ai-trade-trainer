@@ -3,6 +3,7 @@
 import { ExpandIcon } from "lucide-react"
 
 import { ChartLabWorkspace } from "@/components/chart-lab/chart-lab-workspace"
+import { useUserState } from "@/components/providers/user-state-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,13 +15,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { getChartScenario } from "@/content/chart-scenarios"
-import type { ChartScenario } from "@/lib/charts/types"
+import type { ChartScenario, ChartScoreResult, UserMarker } from "@/lib/charts/types"
 
 interface ChartLabProps {
   scenarioId?: string
   scenario?: ChartScenario
-  /** Optional caption shown above the chart in lessons. */
   caption?: string
+  /** Record global progress when user submits an interactive chart task */
+  trackProgress?: boolean
 }
 
 const CONCEPT_LABELS: Record<string, string> = {
@@ -38,8 +40,15 @@ const CONCEPT_LABELS: Record<string, string> = {
   "risk-reward": "Risk/reward",
 }
 
-export function ChartLab({ scenarioId, scenario: scenarioProp, caption }: ChartLabProps) {
-  const scenario = scenarioProp ?? (scenarioId ? getChartScenario(scenarioId) : undefined)
+export function ChartLab({
+  scenarioId,
+  scenario: scenarioProp,
+  caption,
+  trackProgress = false,
+}: ChartLabProps) {
+  const { recordChartLabActivity } = useUserState()
+  const scenario =
+    scenarioProp ?? (scenarioId ? getChartScenario(scenarioId) : undefined)
 
   if (!scenario) {
     return (
@@ -50,6 +59,11 @@ export function ChartLab({ scenarioId, scenario: scenarioProp, caption }: ChartL
   }
 
   const interactive = Boolean(scenario.expectedAnswer)
+
+  const handleComplete = (result: ChartScoreResult, _markers: UserMarker[]) => {
+    if (!trackProgress || !interactive) return
+    recordChartLabActivity(scenario.id, scenario.title, result.score)
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border border-border/60 bg-card/50">
@@ -90,13 +104,21 @@ export function ChartLab({ scenarioId, scenario: scenarioProp, caption }: ChartL
                   : scenario.description}
               </DialogDescription>
             </DialogHeader>
-            <ChartLabWorkspace scenario={scenario} variant="full" />
+            <ChartLabWorkspace
+              scenario={scenario}
+              variant="full"
+              onComplete={handleComplete}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="p-4">
-        <ChartLabWorkspace scenario={scenario} variant="embed" />
+        <ChartLabWorkspace
+          scenario={scenario}
+          variant="embed"
+          onComplete={handleComplete}
+        />
       </div>
     </div>
   )

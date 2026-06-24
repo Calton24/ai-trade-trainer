@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { MotivationProvider } from "@/components/habits/motivation-provider"
 import { UserStateProvider } from "@/components/providers/user-state-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -42,7 +43,9 @@ export default function RootLayout({
       <body>
         <ThemeProvider defaultTheme="dark" forcedTheme="dark">
           <TooltipProvider>
-            <UserStateProvider>{children}</UserStateProvider>
+            <MotivationProvider>
+              <UserStateProvider>{children}</UserStateProvider>
+            </MotivationProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>

@@ -1,0 +1,232 @@
+import { buildConcept } from "@/content/book-lab/concept-builder"
+import type { BookLabConcept } from "@/lib/book-lab/types"
+
+const SECTION = "bl-risk-money-management"
+
+export const riskMoneyManagementConcepts: BookLabConcept[] = [
+  buildConcept({
+    slug: "risk-per-trade",
+    sectionId: SECTION,
+    title: "Risk Per Trade",
+    summary: "Decide how much account equity you will lose if stopped out — before you enter.",
+    explanation:
+      "Risk per trade is a fixed dollar or percent of account (e.g. 0.5–1%). It keeps one bad idea from damaging the whole account. Size comes from risk divided by stop distance.",
+    whyMatters: "Without fixed risk, winners cannot offset losers over time.",
+    commonMistake: "Using the same share count on every ticker regardless of stop distance.",
+    reflectionPrompt: "What percent of your account will you risk per trade while learning?",
+    relatedConceptSlugs: ["stop-loss", "position-sizing"],
+    quizQuestions: [{
+      question: "Risk per trade should be defined:",
+      options: [
+        { id: "a", text: "Before entry, based on account size" },
+        { id: "b", text: "After you are down 20%" },
+        { id: "c", text: "Only on winning days" },
+        { id: "d", text: "Never — use max leverage" },
+      ],
+      correctAnswer: "a",
+      explanation: "Pre-defined risk protects the account.",
+    }],
+  }),
+  buildConcept({
+    slug: "stop-loss",
+    sectionId: SECTION,
+    title: "Stop Loss",
+    summary: "The price or level where you admit the trade idea is wrong and exit.",
+    explanation:
+      "Stops cap loss at a planned amount. They belong at structure — below support for longs, above resistance for shorts — not at random round numbers chosen after entry.",
+    whyMatters: "No stop means unlimited downside on a bad day.",
+    commonMistake: "Moving stops farther away when price approaches them.",
+    chartDemoId: "demo-support",
+    chartPracticeId: "task-identify-support",
+    reflectionPrompt: "Where will you place stops — structure or emotion?",
+    relatedConceptSlugs: ["risk-per-trade", "good-vs-bad-stop"],
+    quizQuestions: [{
+      question: "A stop loss exists to:",
+      options: [
+        { id: "a", text: "Limit loss when the setup fails" },
+        { id: "b", text: "Guarantee profit" },
+        { id: "c", text: "Avoid all losing trades" },
+        { id: "d", text: "Double your position" },
+      ],
+      correctAnswer: "a",
+      explanation: "Stops cap downside when wrong.",
+    }],
+  }),
+  buildConcept({
+    slug: "profit-target",
+    sectionId: SECTION,
+    title: "Profit Target",
+    summary: "Where you plan to take money off the table if the trade works.",
+    explanation:
+      "Targets anchor reward — prior high, measured move, or key level. Partial targets reduce stress and lock in progress while leaving room for runners.",
+    whyMatters: "Without targets, green trades often round-trip to red.",
+    commonMistake: "Removing targets because 'it might go higher' with no plan.",
+    reflectionPrompt: "Will you use full exits, partials, or both?",
+    relatedConceptSlugs: ["risk-reward-ratio", "partial-profits"],
+    quizQuestions: [{
+      question: "A profit target helps you:",
+      options: [
+        { id: "a", text: "Define reward before entry" },
+        { id: "b", text: "Eliminate losses" },
+        { id: "c", text: "Skip journaling" },
+        { id: "d", text: "Trade without stops" },
+      ],
+      correctAnswer: "a",
+      explanation: "Targets define planned reward.",
+    }],
+  }),
+  buildConcept({
+    slug: "risk-reward-ratio",
+    sectionId: SECTION,
+    title: "Risk/Reward Ratio",
+    summary: "Compare potential loss to potential gain — e.g. risk £10 to make £20 is 1:2.",
+    explanation:
+      "Measure stop distance (risk) versus target distance (reward). Many beginners aim for at least 1:2 so winners outweigh losers even with a modest win rate.",
+    whyMatters: "Poor R:R means you need unrealistically high accuracy.",
+    commonMistake: "Entering first and deciding stop loss later.",
+    chartDemoId: "demo-risk-reward",
+    chartPracticeId: "task-risk-reward",
+    practiceDrill: {
+      type: "risk-reward-check",
+      title: "Is this at least 1:2?",
+      prompt: "Entry, stop, and target are marked. Is reward at least twice the risk?",
+      options: [
+        { id: "yes", text: "Yes — target is 2×+ the stop distance", correct: true, feedback: "Reward distance exceeds risk — acceptable R:R." },
+        { id: "no", text: "No — target is too close", correct: false, feedback: "Tight targets need very high win rates." },
+      ],
+      correctFeedback: "You measured risk before reward.",
+      riskyFeedback: "Taking trades with tiny reward vs large risk erodes edge.",
+      improvementTip: "Define stop and target before clicking buy.",
+    },
+    reflectionPrompt: "What minimum R:R will you require before entering?",
+    relatedConceptSlugs: ["stop-loss", "profit-target", "position-sizing"],
+    quizQuestions: [{
+      question: "Risking £10 to make £20 is:",
+      options: [
+        { id: "a", text: "1:2 risk/reward" },
+        { id: "b", text: "2:1 risk/reward" },
+        { id: "c", text: "No ratio needed" },
+        { id: "d", text: "Guaranteed win" },
+      ],
+      correctAnswer: "a",
+      explanation: "Reward is twice the risk — 1:2 R:R.",
+    }],
+  }),
+  buildConcept({
+    slug: "position-sizing",
+    sectionId: SECTION,
+    title: "Position Sizing",
+    summary: "Share count from risk amount ÷ stop distance — not from gut feel.",
+    explanation:
+      "If you risk $100 and stop is $0.50 away, size is 200 shares. Wider stop means smaller size for the same dollar risk.",
+    whyMatters: "Correct sizing keeps risk constant across different setups.",
+    commonMistake: "Maxing size on 'sure thing' trades.",
+    reflectionPrompt: "Will you use a fixed dollar risk or fixed percent?",
+    relatedConceptSlugs: ["risk-per-trade", "risk-reward-ratio"],
+    quizQuestions: [{
+      question: "Position size should shrink when:",
+      options: [
+        { id: "a", text: "Your stop distance is wider" },
+        { id: "b", text: "You feel confident" },
+        { id: "c", text: "You lost yesterday" },
+        { id: "d", text: "Volume is high" },
+      ],
+      correctAnswer: "a",
+      explanation: "Wider stops need smaller size for same dollar risk.",
+    }],
+  }),
+  buildConcept({
+    slug: "daily-loss-limit",
+    sectionId: SECTION,
+    title: "Daily Loss Limit",
+    summary: "Stop trading for the day after a predefined drawdown.",
+    explanation:
+      "A daily max loss (e.g. 2–3R or fixed dollars) prevents revenge spirals. When hit, close platform, journal, walk away.",
+    whyMatters: "One bad afternoon can undo weeks of discipline without a cap.",
+    commonMistake: "Doubling size to 'get back to even' after the limit.",
+    reflectionPrompt: "What daily loss will make you stop clicking?",
+    relatedConceptSlugs: ["protect-account-first", "revenge-trading"],
+    quizQuestions: [{
+      question: "A daily loss limit helps:",
+      options: [
+        { id: "a", text: "Stop emotional overtrading after a bad streak" },
+        { id: "b", text: "Guarantee daily profit" },
+        { id: "c", text: "Remove need for stops" },
+        { id: "d", text: "Increase size automatically" },
+      ],
+      correctAnswer: "a",
+      explanation: "Caps prevent tilt from compounding.",
+    }],
+  }),
+  buildConcept({
+    slug: "good-setup-can-still-lose",
+    sectionId: SECTION,
+    title: "Good Setups Still Lose",
+    summary: "Edge is statistical — any single trade can fail even with a solid plan.",
+    explanation:
+      "Risk management assumes losses happen. You manage a series of trades, not one lottery ticket. Process quality matters over any one outcome.",
+    whyMatters: "One loss should not destroy confidence or rules.",
+    commonMistake: "Abandoning a strategy after one stopped trade.",
+    reflectionPrompt: "How will you judge success — one trade or 20?",
+    relatedConceptSlugs: ["risk-reward-ratio", "protect-account-first"],
+    quizQuestions: [{
+      question: "After a stopped loss on a valid setup you should:",
+      options: [
+        { id: "a", text: "Follow your plan and review later" },
+        { id: "b", text: "Remove all stops" },
+        { id: "c", text: "Triple size immediately" },
+        { id: "d", text: "Never trade again" },
+      ],
+      correctAnswer: "a",
+      explanation: "Losses are part of probabilistic edge.",
+    }],
+  }),
+  buildConcept({
+    slug: "protect-account-first",
+    sectionId: SECTION,
+    title: "Protect the Account First",
+    summary: "Staying in the game beats hero trades — survival enables learning.",
+    explanation:
+      "Capital preservation lets you compound skill. Blowing up ends the learning curve. Small, consistent risk beats occasional home runs followed by ruin.",
+    whyMatters: "You cannot improve if you cannot trade tomorrow.",
+    commonMistake: "Risking rent money because of FOMO on a hot ticker.",
+    reflectionPrompt: "What account rule protects your ability to learn?",
+    relatedConceptSlugs: ["daily-loss-limit", "risk-per-trade"],
+    quizQuestions: [{
+      question: "Priority one for beginners:",
+      options: [
+        { id: "a", text: "Preserve capital and follow rules" },
+        { id: "b", text: "Maximize daily P&L at all costs" },
+        { id: "c", text: "Never take a loss" },
+        { id: "d", text: "Trade without a plan" },
+      ],
+      correctAnswer: "a",
+      explanation: "Survival and process come first.",
+    }],
+  }),
+  buildConcept({
+    slug: "good-vs-bad-stop",
+    sectionId: SECTION,
+    title: "Good Stop vs Bad Stop",
+    summary: "Good stops sit beyond structure; bad stops sit where noise triggers you out.",
+    explanation:
+      "A good stop invalidates the idea — below the flag for a long, above the range for a short. Bad stops are arbitrary, too tight, or moved to avoid pain.",
+    whyMatters: "Stop placement defines whether your R:R is real or fantasy.",
+    commonMistake: "Placing stops exactly at obvious levels everyone sees.",
+    chartDemoId: "demo-risk-reward",
+    chartPracticeId: "task-risk-reward",
+    reflectionPrompt: "What makes a stop 'invalidation' vs 'annoyance'?",
+    relatedConceptSlugs: ["stop-loss", "trade-invalidation"],
+    quizQuestions: [{
+      question: "A good stop is placed:",
+      options: [
+        { id: "a", text: "Where the trade idea is proven wrong" },
+        { id: "b", text: "One cent away to avoid any loss" },
+        { id: "c", text: "Only after you are in profit" },
+        { id: "d", text: "Nowhere — stops are optional" },
+      ],
+      correctAnswer: "a",
+      explanation: "Stops should invalidate the setup logically.",
+    }],
+  }),
+]

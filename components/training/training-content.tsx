@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { BookOpenIcon, InfoIcon, LineChartIcon } from "lucide-react"
+import { BookOpenIcon, InfoIcon, LayersIcon, LineChartIcon } from "lucide-react"
 
 import { getChartScenario, getInteractiveScenarios } from "@/content/chart-scenarios"
 import { getDrillById as getCourseDrill } from "@/content/registry"
@@ -196,6 +196,26 @@ export function TrainingContent() {
             onComplete={handleComplete}
           />
         </div>
+
+        {lastResult && lastResult.result.score < 70 && (
+          <div className="rounded-xl border border-border/60 bg-card/50 p-5">
+            <div className="flex items-center gap-2 text-primary">
+              <LayersIcon className="size-4" />
+              <p className="text-sm font-medium">Review chart flashcards</p>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Practise support, resistance, and structure with interactive chart
+              flashcards.
+            </p>
+            <Button
+              className="mt-3"
+              size="sm"
+              render={<Link href="/flashcards/session?mode=chart" />}
+            >
+              Review chart flashcards
+            </Button>
+          </div>
+        )}
 
         {/* Journal reflection save */}
         {lastResult && !journalSaved && (
