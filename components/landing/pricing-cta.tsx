@@ -11,11 +11,12 @@ export function PricingCta() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-medium text-primary">Pricing</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Start free, upgrade when you&apos;re ready
+            Choose the pace that matches your learning commitment
           </h2>
           <p className="mt-4 text-muted-foreground">
-            No profit promises — just structured education. First 2 modules free
-            on the Free plan.
+            Weekly to try the platform, 6-month to build competency, annual to
+            master over time. No lifetime plans — your subscription grows with
+            the product.
           </p>
         </div>
 

@@ -1,0 +1,8 @@
+# TradeTrainer AI — linked Supabase project (do not create a new project)
+project_id = "njsvozqbgirsikscaxbq"
+
+[api]
+enabled = true
+
+[db]
+major_version = 17

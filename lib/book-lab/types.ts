@@ -44,6 +44,8 @@ export interface BookLabSection {
   title: string
   description: string
   order: number
+  /** Which library book this section belongs to. */
+  bookId: string
   concepts: BookLabConcept[]
 }
 
@@ -51,6 +53,8 @@ export interface BookLabConcept {
   id: string
   slug: string
   sectionId: string
+  /** Which library book this concept belongs to. */
+  bookId: string
   title: string
   summary: string
   difficulty: Difficulty
@@ -66,6 +70,60 @@ export interface BookLabConcept {
   practiceDrill?: BookLabPracticeDrill
   reflectionPrompt: string
   relatedConceptSlugs: string[]
+}
+
+/** A learning asset in the Trading Library (book, paper, guide, etc.). */
+export type LibraryAssetType =
+  | "book"
+  | "research-paper"
+  | "psychology-guide"
+  | "playbook"
+  | "strategy-manual"
+  | "course"
+  | "case-study"
+
+export interface LibraryBook {
+  id: string
+  slug: string
+  title: string
+  author: string
+  category: string
+  assetType: LibraryAssetType
+  /** Emoji used as the cover placeholder. */
+  cover: string
+  /** Tailwind gradient classes for the cover background. */
+  coverGradient: string
+  description: string
+  theme: string
+  difficulty: Difficulty
+  estimatedHours: number
+  sections: BookLabSection[]
+}
+
+export interface LibraryBookStats {
+  bookId: string
+  conceptsCompleted: number
+  totalConcepts: number
+  progressPercent: number
+  xpEarned: number
+  quizAverage: number
+  bookmarks: number
+  notes: number
+  completed: boolean
+  nextConceptSlug: string | null
+  nextConceptTitle: string | null
+  currentSectionTitle: string | null
+}
+
+export interface LibraryStats {
+  booksOwned: number
+  booksCompleted: number
+  lessonsCompleted: number
+  totalLessons: number
+  totalXP: number
+  averageQuizScore: number
+  readingProgressPercent: number
+  estimatedReadingHours: number
 }
 
 export interface BookLabProgressSnapshot {

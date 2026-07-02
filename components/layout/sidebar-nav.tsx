@@ -4,19 +4,23 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   BarChart3Icon,
-  BookMarkedIcon,
   BookOpenIcon,
   BrainIcon,
+  LibraryBigIcon,
   CandlestickChartIcon,
+  ClipboardListIcon,
   CreditCardIcon,
   GraduationCapIcon,
   LayersIcon,
   LayoutDashboardIcon,
   LineChartIcon,
   MapIcon,
+  MedalIcon,
+  ShieldCheckIcon,
   TargetIcon,
   TrendingUpIcon,
-  ClipboardListIcon,
+  TrophyIcon,
+  UserIcon,
   UsersIcon,
 } from "lucide-react"
 
@@ -25,44 +29,95 @@ import { cn } from "@/lib/utils"
 const MOBILE_NAV_HREFS = [
   "/dashboard",
   "/learning-map",
-  "/paths",
-  "/trend-spotter",
+  "/simulator",
   "/chart-lab",
+  "/journal",
 ] as const
 
-const primaryNavItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
-  { href: "/learning-map", label: "Learning Map", icon: MapIcon },
-  { href: "/trader-readiness", label: "Trader Readiness", icon: TargetIcon },
-  { href: "/paths", label: "Paths", icon: GraduationCapIcon },
-  { href: "/trend-spotter", label: "Trend Spotter", icon: TrendingUpIcon },
-  { href: "/chart-lab", label: "Chart Lab", icon: CandlestickChartIcon },
-  { href: "/strategy-wiki", label: "Strategy Wiki", icon: ClipboardListIcon },
-  { href: "/flashcards", label: "Flashcards", icon: LayersIcon },
-  { href: "/book-lab", label: "Book Lab", icon: BookMarkedIcon },
-  { href: "/quizzes", label: "Quizzes", icon: BrainIcon },
-  { href: "/journal", label: "Journal", icon: BookOpenIcon },
-  { href: "/progress", label: "Progress", icon: BarChart3Icon },
-  { href: "/pricing", label: "Pricing", icon: CreditCardIcon },
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboardIcon }
+
+const navSections: { title: string; items: NavItem[] }[] = [
+  {
+    title: "",
+    items: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon }],
+  },
+  {
+    title: "Progression",
+    items: [
+      { href: "/progression", label: "Progression", icon: TrophyIcon },
+      { href: "/leaderboard", label: "Leaderboard", icon: MedalIcon },
+    ],
+  },
+  {
+    title: "Learning",
+    items: [
+      { href: "/learning-map", label: "Learning Map", icon: MapIcon },
+      { href: "/paths", label: "Paths", icon: GraduationCapIcon },
+      { href: "/learn", label: "Learn", icon: GraduationCapIcon },
+      { href: "/library", label: "Trading Library", icon: LibraryBigIcon },
+      { href: "/flashcards", label: "Flashcards", icon: LayersIcon },
+      { href: "/quizzes", label: "Quizzes", icon: BrainIcon },
+    ],
+  },
+  {
+    title: "Practice",
+    items: [
+      { href: "/chart-lab", label: "Chart Lab", icon: CandlestickChartIcon },
+      { href: "/trend-spotter", label: "Trend Spotter", icon: TrendingUpIcon },
+      { href: "/strategy-wiki", label: "Strategy Wiki", icon: ClipboardListIcon },
+    ],
+  },
+  {
+    title: "Simulation",
+    items: [
+      { href: "/simulator", label: "Trading Simulator", icon: LineChartIcon },
+      { href: "/journal", label: "Trade Journal", icon: BookOpenIcon },
+      { href: "/simulator/performance", label: "Performance", icon: BarChart3Icon },
+    ],
+  },
+  {
+    title: "Assessment",
+    items: [
+      { href: "/trader-readiness", label: "Trader Readiness", icon: TargetIcon },
+      { href: "/progression/live-transition", label: "Live Progression", icon: ShieldCheckIcon },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { href: "/profile", label: "Profile", icon: UserIcon },
+      { href: "/progress", label: "Progress", icon: BarChart3Icon },
+      { href: "/pricing", label: "Pricing", icon: CreditCardIcon },
+    ],
+  },
+  {
+    title: "Community",
+    items: [{ href: "/community", label: "Community", icon: UsersIcon }],
+  },
 ]
 
-const moreNavItems = [
-  { href: "/learn", label: "Learn", icon: GraduationCapIcon },
-  { href: "/training", label: "Training", icon: LineChartIcon },
-  { href: "/community", label: "Community", icon: UsersIcon },
-]
-
-const navItems = [...primaryNavItems, ...moreNavItems]
+const allNavItems = navSections.flatMap((s) => s.items)
 
 const mobileNavItems = MOBILE_NAV_HREFS.map(
-  (href) => navItems.find((item) => item.href === href)!
+  (href) => allNavItems.find((item) => item.href === href)!
 )
 
 export function SidebarNav() {
   const pathname = usePathname()
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`)
+  const isActive = (href: string) => {
+    if (href === "/progression") {
+      return pathname === "/progression"
+    }
+    if (href === "/simulator") {
+      return (
+        pathname === "/simulator" ||
+        (pathname.startsWith("/simulator/") &&
+          !pathname.startsWith("/simulator/performance"))
+      )
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
 
   return (
     <>
@@ -76,47 +131,34 @@ export function SidebarNav() {
           </Link>
         </div>
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
-          {primaryNavItems.map((item) => {
-            const active = isActive(item.href)
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                  active
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                )}
-              >
-                <Icon />
-                {item.label}
-              </Link>
-            )
-          })}
-          <p className="mb-1 mt-4 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
-            More
-          </p>
-          {moreNavItems.map((item) => {
-            const active = isActive(item.href)
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                  active
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                )}
-              >
-                <Icon />
-                {item.label}
-              </Link>
-            )
-          })}
+          {navSections.map((section) => (
+            <div key={section.title || "root"}>
+              {section.title && (
+                <p className="mb-1 mt-4 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70 first:mt-0">
+                  {section.title}
+                </p>
+              )}
+              {section.items.map((item) => {
+                const active = isActive(item.href)
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                      active
+                        ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    )}
+                  >
+                    <Icon />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
         </nav>
         <div className="border-t border-border/60 p-4">
           <p className="text-xs leading-relaxed text-muted-foreground">

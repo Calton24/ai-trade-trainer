@@ -1,12 +1,10 @@
 import type { Metadata } from "next"
-
-import { GoalSettingsContent } from "@/components/habits/goal-settings-content"
+import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Goal Settings — TradeTrainer AI",
-  description: "Set your weekly learning target and build consistent habits.",
+  title: "Goal Settings",
 }
 
-export default function GoalSettingsPage() {
-  return <GoalSettingsContent />
+export default function GoalSettingsRedirectPage() {
+  redirect("/settings/profile")
 }

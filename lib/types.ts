@@ -204,7 +204,7 @@ export interface JournalEntry {
   mistakeTag: string
   personalNote: string
   createdAt: string
-  source?: "book-lab" | "training" | "reflection" | "course" | "strategy-wiki"
+  source?: "book-lab" | "training" | "reflection" | "course" | "strategy-wiki" | "simulator"
   conceptTitle?: string
   drillType?: string
 }
@@ -225,9 +225,14 @@ export interface PricingTier {
   price: string
   period?: string
   description: string
+  studyAlignment?: string
   features: string[]
+  badge?: "most-popular" | "best-value"
+  /** @deprecated use badge */
   highlighted?: boolean
   cta: string
+  stripePriceId?: string
+  billingInterval?: string
 }
 
 export interface ProgressStats {

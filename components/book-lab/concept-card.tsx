@@ -7,7 +7,7 @@ import { useUserState } from "@/components/providers/user-state-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { getBookLabSectionForConcept } from "@/content/book-lab"
+import { getConceptHref, getSectionForConcept } from "@/content/library"
 import type { BookLabConcept } from "@/lib/book-lab/types"
 
 interface BookLabConceptCardProps {
@@ -17,7 +17,7 @@ interface BookLabConceptCardProps {
 
 export function BookLabConceptCard({ concept, done }: BookLabConceptCardProps) {
   const { state } = useUserState()
-  const section = getBookLabSectionForConcept(concept)
+  const section = getSectionForConcept(concept)
   const quizCount = concept.quizQuestions.length
   const hasChart = Boolean(concept.chartDemoId)
   const hasPractice = Boolean(concept.practiceDrill || concept.chartPracticeId)
@@ -72,7 +72,7 @@ export function BookLabConceptCard({ concept, done }: BookLabConceptCardProps) {
       <Button
         size="sm"
         variant={done ? "outline" : "default"}
-        render={<Link href={`/book-lab/${concept.slug}`} />}
+        render={<Link href={getConceptHref(concept)} />}
       >
         {ctaLabel}
         <ArrowRightIcon data-icon="inline-end" />

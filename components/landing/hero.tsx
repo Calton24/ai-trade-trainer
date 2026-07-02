@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRightIcon, PlayIcon } from "lucide-react"
+import { ArrowRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,32 +13,27 @@ export function Hero() {
           variant="secondary"
           className="border-primary/20 bg-primary/10 text-primary"
         >
-          Learn trading by doing interactive chart drills
+          The Codecademy for traders
         </Badge>
 
         <div className="flex max-w-3xl flex-col gap-5">
           <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-            Learn Trading Step by Step Through Interactive Chart Practice
+            Become a Competent Trader Through Structured Practice
           </h1>
           <p className="text-lg text-muted-foreground text-pretty sm:text-xl">
-            TradeTrainer AI turns trading education into guided lessons, chart
-            drills, quizzes, feedback, and progress tracking — so beginners can
-            practice before risking real money.
+            Lessons, a trading library, chart labs, a market simulator, and a
+            measurable competency score — a protected, university-style programme
+            that takes you from complete beginner to live-trading ready.
           </p>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button size="lg" render={<Link href="/learn" />}>
-            Start Learning Free
+          <Button size="lg" render={<Link href="/sign-up" />}>
+            Create free account
             <ArrowRightIcon data-icon="inline-end" />
           </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            render={<Link href="/training" />}
-          >
-            <PlayIcon data-icon="inline-start" />
-            Try a Chart Drill
+          <Button size="lg" variant="outline" render={<Link href="/#features" />}>
+            See everything included
           </Button>
         </div>
 

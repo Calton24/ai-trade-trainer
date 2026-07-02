@@ -8,11 +8,12 @@ import { executionConcepts } from "@/content/book-lab/concepts/execution"
 import { psychologyDisciplineConcepts } from "@/content/book-lab/concepts/psychology-discipline"
 import { journalingReviewConcepts } from "@/content/book-lab/concepts/journaling-review"
 import type { BookLabConcept, BookLabSection } from "@/lib/book-lab/types"
+import { DEFAULT_BOOK_ID } from "@/content/book-lab/concept-builder"
 
 export const BOOK_LAB_DISCLAIMER =
-  "Book Lab is an original educational companion inspired by day-trading concepts. It does not reproduce copyrighted book content and does not provide financial advice, trading signals, live recommendations, or profit guarantees."
+  "This is an original educational companion inspired by widely taught trading concepts. It does not reproduce copyrighted book content and does not provide financial advice, trading signals, live recommendations, or profit guarantees."
 
-const SECTION_DEFS: Omit<BookLabSection, "concepts">[] = [
+const SECTION_DEFS: Omit<BookLabSection, "concepts" | "bookId">[] = [
   {
     id: "bl-day-trading-foundations",
     slug: "day-trading-foundations",
@@ -92,6 +93,7 @@ const CONCEPTS_BY_SECTION: Record<string, BookLabConcept[]> = {
 
 export const BOOK_LAB_SECTIONS: BookLabSection[] = SECTION_DEFS.map((s) => ({
   ...s,
+  bookId: DEFAULT_BOOK_ID,
   concepts: CONCEPTS_BY_SECTION[s.id] ?? [],
 }))
 

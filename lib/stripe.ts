@@ -3,23 +3,23 @@
  *
  * Install: npm install stripe @stripe/stripe-js
  *
- * Pro plan: price ID from Stripe Dashboard → Products
- * Lifetime plan: one-time price ID
- *
- * Example checkout session creation (API route):
- *
- * import Stripe from "stripe"
- * const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
- *
- * const session = await stripe.checkout.sessions.create({
- *   mode: "subscription", // or "payment" for lifetime
- *   line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID!, quantity: 1 }],
- *   success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?checkout=success`,
- *   cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?checkout=cancelled`,
- * })
+ * Plans: weekly, 6-month, annual (subscription mode only — no lifetime).
  */
 
-export const STRIPE_PRICE_IDS = {
-  pro: process.env.STRIPE_PRO_PRICE_ID ?? "price_pro_placeholder",
-  lifetime: process.env.STRIPE_LIFETIME_PRICE_ID ?? "price_lifetime_placeholder",
-} as const
+import { STRIPE_PRICE_PLACEHOLDERS } from "@/lib/pricing/plans"
+
+export const STRIPE_PRICE_IDS = STRIPE_PRICE_PLACEHOLDERS
+
+export type StripeCheckoutPlan = keyof typeof STRIPE_PRICE_IDS
+
+/**
+ * Placeholder checkout action — implement in /api/checkout when Stripe is ready.
+ */
+export async function createCheckoutSessionPlaceholder(
+  _plan: StripeCheckoutPlan
+): Promise<{ url: string | null; error?: string }> {
+  return {
+    url: null,
+    error: "Stripe checkout is not configured yet.",
+  }
+}

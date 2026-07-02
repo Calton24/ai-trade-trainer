@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | Progress | `/progress` | XP, accuracy, mistakes, badge collection |
 | Journal | `/journal` | Beginner reflections with confidence ratings |
 | Community | `/community` | Preview feed + Discord waitlist |
-| Pricing | `/pricing` | Free / Pro / Lifetime tiers |
+| Pricing | `/pricing` | Weekly / 6-month / annual subscription tiers |
 
 ## Mock Data
 

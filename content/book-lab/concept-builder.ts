@@ -109,13 +109,32 @@ const DEMO_TO_PRACTICE: Partial<Record<string, string>> = {
   "demo-icc-bullish": "task-icc-bullish",
 }
 
-export function buildConcept(input: ConceptInput): BookLabConcept {
-  const id = `bl-${input.slug}`
-  const chartDemoId = input.chartDemoId ?? SLUG_CHART_DEMOS[input.slug]
-  const chartPracticeId =
-    input.chartPracticeId ??
-    SLUG_CHART_PRACTICE[input.slug] ??
-    (chartDemoId ? DEMO_TO_PRACTICE[chartDemoId] : undefined)
+export interface BuildConceptOptions {
+  /** Prefix for the generated concept id (defaults to "bl"). */
+  idPrefix?: string
+  /** Library book this concept belongs to. */
+  bookId?: string
+  /** Skip the day-trading chart auto-mapping (for non-chart books). */
+  disableChartDefaults?: boolean
+}
+
+export const DEFAULT_BOOK_ID = "day-trading-for-a-living"
+
+export function buildConcept(
+  input: ConceptInput,
+  options: BuildConceptOptions = {}
+): BookLabConcept {
+  const idPrefix = options.idPrefix ?? "bl"
+  const bookId = options.bookId ?? DEFAULT_BOOK_ID
+  const id = `${idPrefix}-${input.slug}`
+  const chartDemoId = options.disableChartDefaults
+    ? input.chartDemoId
+    : input.chartDemoId ?? SLUG_CHART_DEMOS[input.slug]
+  const chartPracticeId = options.disableChartDefaults
+    ? input.chartPracticeId
+    : input.chartPracticeId ??
+      SLUG_CHART_PRACTICE[input.slug] ??
+      (chartDemoId ? DEMO_TO_PRACTICE[chartDemoId] : undefined)
 
   const quizQuestions: BookLabQuizQuestion[] = input.quizQuestions.map(
     (q, i) => ({
@@ -204,6 +223,7 @@ export function buildConcept(input: ConceptInput): BookLabConcept {
     id,
     slug: input.slug,
     sectionId: input.sectionId,
+    bookId,
     title: input.title,
     summary: input.summary,
     difficulty: input.difficulty ?? "beginner",

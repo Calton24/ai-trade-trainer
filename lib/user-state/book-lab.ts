@@ -1,9 +1,8 @@
 import {
-  getAllBookLabConcepts,
-  getBookLabConceptById,
-  getBookLabSectionForConcept,
-  getRecommendedBookConceptSlug,
-} from "@/content/book-lab"
+  getAllLibraryConcepts,
+  getLibraryConceptById,
+  getSectionForConcept,
+} from "@/content/library"
 import type { BookLabStats } from "@/lib/book-lab/types"
 import type { JournalEntry } from "@/lib/types"
 
@@ -30,7 +29,7 @@ export function completeBookConcept(
 ): UserState {
   if (state.bookLab.completedConceptIds.includes(conceptId)) return state
 
-  const concept = getBookLabConceptById(conceptId)
+  const concept = getLibraryConceptById(conceptId)
   const xp = concept?.xpReward ?? xpReward
 
   let next: UserState = {
@@ -76,7 +75,7 @@ export function recordBookQuizAttempt(
   if (markCompleteOnPass && attempt.passed) {
     next = completeBookConcept(next, attempt.conceptId, 0)
   } else {
-    const concept = getBookLabConceptById(attempt.conceptId)
+    const concept = getLibraryConceptById(attempt.conceptId)
     const { state: withActivity } = recordLearningActivity(next, {
       type: "quiz-complete",
       source: "book-lab",
@@ -113,7 +112,7 @@ export function recordBookPracticeDrill(
   if (markComplete && drill.score >= 60) {
     next = completeBookConcept(next, drill.conceptId, 0)
   } else {
-    const concept = getBookLabConceptById(drill.conceptId)
+    const concept = getLibraryConceptById(drill.conceptId)
     const { state: withActivity } = recordLearningActivity(next, {
       type: "practice-complete",
       source: "book-lab",
@@ -167,7 +166,7 @@ export function saveBookReflection(
 }
 
 export function computeBookLabStats(state: UserState): BookLabStats {
-  const all = getAllBookLabConcepts()
+  const all = getAllLibraryConcepts()
   const completed = state.bookLab.completedConceptIds
   const completedSet = new Set(completed)
 
@@ -177,15 +176,14 @@ export function computeBookLabStats(state: UserState): BookLabStats {
       ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length)
       : 0
 
-  const nextSlug = getRecommendedBookConceptSlug(completed)
-  const nextConcept = all.find((c) => c.slug === nextSlug)
+  const nextConcept = all.find((c) => !completedSet.has(c.id))
 
-  let currentSectionTitle = "Day Trading Foundations"
+  let currentSectionTitle = "Trading Library"
   if (completed.length > 0) {
-    const lastCompleted = getBookLabConceptById(completed[completed.length - 1])
+    const lastCompleted = getLibraryConceptById(completed[completed.length - 1])
     if (lastCompleted) {
       currentSectionTitle =
-        getBookLabSectionForConcept(lastCompleted)?.title ?? currentSectionTitle
+        getSectionForConcept(lastCompleted)?.title ?? currentSectionTitle
     }
   }
 

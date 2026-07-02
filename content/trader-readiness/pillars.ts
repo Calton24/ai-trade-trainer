@@ -94,7 +94,7 @@ export const MARKET_KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
     correctAnswer: "b",
     explanation:
       "Expectancy (average win × win rate − average loss × loss rate) determines profitability. A 40% win rate with 3:1 R:R can be highly profitable.",
-    lessonHref: "/book-lab/risk-money-management",
+    lessonHref: "/library/day-trading-for-a-living",
   },
   {
     id: "mk-3",
@@ -110,7 +110,7 @@ export const MARKET_KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
     correctAnswer: "b",
     explanation:
       "Higher risk per trade amplifies both gains and losses. A losing streak at 5% risk can destroy an account in a handful of trades.",
-    lessonHref: "/book-lab/risk-money-management",
+    lessonHref: "/library/day-trading-for-a-living",
   },
   {
     id: "mk-4",
@@ -139,7 +139,7 @@ export const MARKET_KNOWLEDGE_QUESTIONS: KnowledgeQuestion[] = [
     correctAnswer: "b",
     explanation:
       "A stop loss caps your downside on any single trade. It is a risk management tool, not a profit guarantee.",
-    lessonHref: "/book-lab/risk-money-management",
+    lessonHref: "/library/day-trading-for-a-living",
   },
   {
     id: "mk-6",

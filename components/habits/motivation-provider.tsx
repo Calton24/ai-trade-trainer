@@ -7,7 +7,16 @@ import {
   useEffect,
   useState,
 } from "react"
-import { CheckCircle2Icon, FlameIcon, TrophyIcon, XIcon } from "lucide-react"
+import {
+  AwardIcon,
+  CheckCircle2Icon,
+  FlameIcon,
+  GiftIcon,
+  SparklesIcon,
+  TrophyIcon,
+  XIcon,
+  ZapIcon,
+} from "lucide-react"
 
 import type { MotivationEvent } from "@/lib/user-state/types"
 import { cn } from "@/lib/utils"
@@ -16,7 +25,7 @@ interface ToastItem {
   id: string
   message: string
   subtext?: string
-  icon: "flame" | "trophy" | "check"
+  icon: "flame" | "trophy" | "check" | "rank" | "achievement" | "challenge" | "xp"
 }
 
 interface MotivationContextValue {
@@ -62,6 +71,34 @@ function eventToToast(event: MotivationEvent): ToastItem {
         message: `Badge unlocked: ${event.badgeName}`,
         subtext: "Earned from real practice — keep going.",
       }
+    case "rank-up":
+      return {
+        id: crypto.randomUUID(),
+        icon: "rank",
+        message: `Rank up! ${event.insignia} ${event.title}`,
+        subtext: `You've reached Trader Rank ${event.tier}.`,
+      }
+    case "achievement-unlocked":
+      return {
+        id: crypto.randomUUID(),
+        icon: "achievement",
+        message: `${event.icon} Achievement: ${event.name}`,
+        subtext: `+${event.bonusXp} bonus XP earned.`,
+      }
+    case "challenge-complete":
+      return {
+        id: crypto.randomUUID(),
+        icon: "challenge",
+        message: `${event.period[0].toUpperCase()}${event.period.slice(1)} challenge complete!`,
+        subtext: `+${event.rewardXp} XP reward claimed.`,
+      }
+    case "xp-awarded":
+      return {
+        id: crypto.randomUUID(),
+        icon: "xp",
+        message: `+${event.amount} XP`,
+        subtext: event.reason,
+      }
   }
 }
 
@@ -98,12 +135,20 @@ export function MotivationProvider({ children }: { children: React.ReactNode }) 
                 "flex size-8 shrink-0 items-center justify-center rounded-lg",
                 toast.icon === "flame" && "bg-primary/10 text-primary",
                 toast.icon === "trophy" && "bg-amber-500/10 text-amber-400",
-                toast.icon === "check" && "bg-primary/10 text-primary"
+                toast.icon === "check" && "bg-primary/10 text-primary",
+                toast.icon === "rank" && "bg-fuchsia-500/10 text-fuchsia-400",
+                toast.icon === "achievement" && "bg-amber-500/10 text-amber-400",
+                toast.icon === "challenge" && "bg-emerald-500/10 text-emerald-400",
+                toast.icon === "xp" && "bg-primary/10 text-primary"
               )}
             >
               {toast.icon === "flame" && <FlameIcon className="size-4" />}
               {toast.icon === "trophy" && <TrophyIcon className="size-4" />}
               {toast.icon === "check" && <CheckCircle2Icon className="size-4" />}
+              {toast.icon === "rank" && <AwardIcon className="size-4" />}
+              {toast.icon === "achievement" && <SparklesIcon className="size-4" />}
+              {toast.icon === "challenge" && <GiftIcon className="size-4" />}
+              {toast.icon === "xp" && <ZapIcon className="size-4" />}
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">{toast.message}</p>

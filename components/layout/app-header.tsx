@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { TrendingUpIcon } from "lucide-react"
 
+import { AuthHeaderActions } from "@/components/layout/auth-header-actions"
 import { StreakIndicator } from "@/components/habits/streak-indicator"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface AppHeaderProps {
@@ -52,17 +52,7 @@ export function AppHeader({ variant = "marketing" }: AppHeaderProps) {
 
         <div className="flex items-center gap-2">
           {variant === "app" && <StreakIndicator />}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden sm:inline-flex"
-            render={<Link href="/training" />}
-          >
-            Try a Drill
-          </Button>
-          <Button size="sm" render={<Link href="/learn" />}>
-            Start Learning
-          </Button>
+          <AuthHeaderActions showDrillCta={variant === "app"} />
         </div>
       </div>
     </header>

@@ -1,17 +1,20 @@
+"use client"
+
 import Link from "next/link"
 import { TrendingUpIcon } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { AuthHeaderActions } from "@/components/layout/auth-header-actions"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
   variant?: "marketing" | "app"
 }
 
-const navLinks = [
-  { href: "/paths", label: "Paths" },
-  { href: "/learn", label: "Learn" },
-  { href: "/training", label: "Training" },
+const marketingLinks = [
+  { href: "/#features", label: "Features" },
+  { href: "/#journey", label: "Journey" },
+  { href: "/#books", label: "Books" },
+  { href: "/#plans", label: "Plans" },
   { href: "/pricing", label: "Pricing" },
 ]
 
@@ -34,7 +37,7 @@ export function Header({ variant = "marketing" }: HeaderProps) {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => (
+          {marketingLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -46,12 +49,7 @@ export function Header({ variant = "marketing" }: HeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" render={<Link href="/training" />}>
-            Try a Drill
-          </Button>
-          <Button size="sm" render={<Link href="/learn" />}>
-            Start Learning
-          </Button>
+          <AuthHeaderActions />
         </div>
       </div>
     </header>

@@ -18,10 +18,13 @@ import { useUserState } from "@/components/providers/user-state-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  BOOK_LAB_DISCLAIMER,
-  getBookLabSectionForConcept,
-  getRelatedBookLabConcepts,
-} from "@/content/book-lab"
+  LIBRARY_DISCLAIMER,
+  getBookForConcept,
+  getBookHref,
+  getConceptHref,
+  getRelatedConcepts,
+  getSectionForConcept,
+} from "@/content/library"
 import type { BookLabConcept } from "@/lib/book-lab/types"
 import { cn } from "@/lib/utils"
 
@@ -31,8 +34,10 @@ interface ConceptDetailContentProps {
 
 export function ConceptDetailContent({ concept }: ConceptDetailContentProps) {
   const { isBookConceptDone, markBookConceptComplete } = useUserState()
-  const section = getBookLabSectionForConcept(concept)
-  const related = getRelatedBookLabConcepts(concept)
+  const book = getBookForConcept(concept)
+  const section = getSectionForConcept(concept)
+  const related = getRelatedConcepts(concept)
+  const conceptHref = getConceptHref(concept)
   const done = isBookConceptDone(concept.id)
 
   return (
@@ -43,15 +48,15 @@ export function ConceptDetailContent({ concept }: ConceptDetailContentProps) {
             variant="ghost"
             size="sm"
             className="w-fit"
-            render={<Link href="/book-lab" />}
+            render={<Link href={book ? getBookHref(book) : "/library"} />}
           >
             <ArrowLeftIcon data-icon="inline-start" />
-            Book Lab
+            {book?.title ?? "Trading Library"}
           </Button>
           <div className="flex items-center gap-2 text-primary">
             <BookMarkedIcon className="size-4" />
             <span className="text-sm font-medium">
-              {section?.title ?? "Book Lab"}
+              {section?.title ?? book?.title ?? "Trading Library"}
             </span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -159,7 +164,7 @@ export function ConceptDetailContent({ concept }: ConceptDetailContentProps) {
               variant="outline"
               size="sm"
               className="w-fit"
-              render={<Link href={`/book-lab/${concept.slug}/quiz`} />}
+              render={<Link href={`${conceptHref}/quiz`} />}
             >
               Full quiz
               <ArrowRightIcon data-icon="inline-end" />
@@ -170,7 +175,7 @@ export function ConceptDetailContent({ concept }: ConceptDetailContentProps) {
         <section className="flex flex-col gap-3">
           <p className="text-sm font-medium text-primary">Practise</p>
           <div className="flex flex-wrap gap-2">
-            <Button render={<Link href={`/book-lab/${concept.slug}/practice`} />}>
+            <Button render={<Link href={`${conceptHref}/practice`} />}>
               Open practice drill
             </Button>
             {concept.chartPracticeId && (
@@ -203,7 +208,7 @@ export function ConceptDetailContent({ concept }: ConceptDetailContentProps) {
                   key={r.id}
                   size="sm"
                   variant="outline"
-                  render={<Link href={`/book-lab/${r.slug}`} />}
+                  render={<Link href={getConceptHref(r)} />}
                 >
                   {r.title}
                 </Button>
@@ -212,7 +217,7 @@ export function ConceptDetailContent({ concept }: ConceptDetailContentProps) {
           </section>
         )}
 
-        {done && (
+        {done && book?.id === "day-trading-for-a-living" && (
           <div className="rounded-xl border border-border/60 bg-card/50 p-5">
             <div className="flex items-center gap-2 text-primary">
               <LayersIcon className="size-4" />
@@ -240,7 +245,7 @@ export function ConceptDetailContent({ concept }: ConceptDetailContentProps) {
 
         <p className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground/70">
           <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
-          {BOOK_LAB_DISCLAIMER}
+          {LIBRARY_DISCLAIMER}
         </p>
       </div>
     </AppShell>

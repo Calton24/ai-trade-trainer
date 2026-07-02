@@ -308,6 +308,48 @@ export const badgeDefinitions: Omit<Badge, "earned" | "earnedAt">[] = [
     description: "Scored 85%+ on Chart Reading pillar",
     icon: "📉",
   },
+  {
+    id: "first-simulator-session",
+    name: "First Sim Trade",
+    description: "Completed your first Trading Simulator session",
+    icon: "🎮",
+  },
+  {
+    id: "trend-hunter",
+    name: "Trend Hunter",
+    description: "Passed Chart Reading simulator stage",
+    icon: "🎯",
+  },
+  {
+    id: "sim-risk-planner",
+    name: "Risk Planner",
+    description: "Passed Trade Planning simulator stage",
+    icon: "📐",
+  },
+  {
+    id: "trade-manager",
+    name: "Trade Manager",
+    description: "Passed Trade Management simulator stage",
+    icon: "⚙️",
+  },
+  {
+    id: "hundred-charts-reviewed",
+    name: "100 Charts Reviewed",
+    description: "Reviewed 100 charts in the simulator",
+    icon: "📊",
+  },
+  {
+    id: "hundred-trades-journaled",
+    name: "100 Trades Journaled",
+    description: "Journaled 100 simulator trades",
+    icon: "📓",
+  },
+  {
+    id: "simulator-graduate",
+    name: "Simulator Graduate",
+    description: "Completed all 5 simulator stages",
+    icon: "🎓",
+  },
 ]
 
 export function getBadgeById(id: string) {

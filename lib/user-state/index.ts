@@ -11,6 +11,11 @@ import {
   type UserProgressSnapshot,
 } from "@/lib/course/unlocks"
 import type { JournalEntry, UserProgress } from "@/lib/types"
+import {
+  levelFromXP,
+  getLevelTitle,
+  getXpProgressPercent,
+} from "@/lib/progression/levels"
 
 import type {
   StoredDrillSession,
@@ -21,6 +26,7 @@ import type {
 } from "./types"
 import {
   getInitialBookLabProgress,
+  getInitialGamificationState,
   getInitialLearningMapState,
   STORAGE_KEYS,
 } from "./types"
@@ -52,6 +58,13 @@ import {
   recordReadinessAssessment,
   recordPillarScore,
 } from "./trader-readiness"
+import {
+  computeSimulatorStats,
+  recordSimulatorAttempt,
+  isSimulatorStageUnlocked,
+} from "./simulator"
+import { getDefaultPhaseState } from "@/lib/competence/live-trading-phases"
+import { getInitialSimulatorState } from "@/lib/simulator/types"
 import {
   calculateDailyStreak,
   calculateWeeklyTargetProgress,
@@ -126,6 +139,15 @@ export function loadUserState(): UserState {
       STORAGE_KEYS.traderReadiness,
       getInitialTraderReadinessState()
     ),
+    liveTradingPhase: readJson(
+      STORAGE_KEYS.liveTradingPhase,
+      getDefaultPhaseState()
+    ),
+    simulator: readJson(STORAGE_KEYS.simulator, getInitialSimulatorState()),
+    gamification: readJson(
+      STORAGE_KEYS.gamification,
+      getInitialGamificationState()
+    ),
   }
 }
 
@@ -156,6 +178,9 @@ export function saveUserState(state: UserState) {
   writeJson(STORAGE_KEYS.strategyChallenges, state.strategyWiki.challengeAttempts)
   writeJson(STORAGE_KEYS.learningMapProgress, state.learningMap)
   writeJson(STORAGE_KEYS.traderReadiness, state.traderReadiness)
+  writeJson(STORAGE_KEYS.liveTradingPhase, state.liveTradingPhase)
+  writeJson(STORAGE_KEYS.simulator, state.simulator)
+  writeJson(STORAGE_KEYS.gamification, state.gamification)
 }
 
 export function resetUserProgress() {
@@ -164,16 +189,14 @@ export function resetUserProgress() {
 }
 
 function xpForLevel(level: number) {
-  return level * 100
+  const thresholds = [0, 0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 3800]
+  return thresholds[Math.min(level, thresholds.length - 1)] ?? (level - 1) * 100
 }
 
 export function awardXP(state: UserState, amount: number): UserState {
   const progress = state.progress
   const xp = progress.xp + amount
-  let level = progress.level
-  while (xp >= xpForLevel(level)) {
-    level += 1
-  }
+  const level = levelFromXP(xp)
   return evaluateBadges({
     ...state,
     progress: { ...progress, xp, level },
@@ -546,27 +569,19 @@ export function evaluateBadges(state: UserState): UserState {
     earned.add("chart-reader-level-10")
   }
 
+  const sim = state.simulator
+  if (sim.attempts.length >= 1) earned.add("first-simulator-session")
+  if (sim.completedStageIds.includes("chart-reading")) earned.add("trend-hunter")
+  if (sim.completedStageIds.includes("trade-planning")) earned.add("sim-risk-planner")
+  if (sim.completedStageIds.includes("trade-management")) earned.add("trade-manager")
+  if (sim.chartsReviewed >= 100) earned.add("hundred-charts-reviewed")
+  if (sim.tradesJournaled >= 100) earned.add("hundred-trades-journaled")
+  if (sim.completedStageIds.length >= 5) earned.add("simulator-graduate")
+
   return { ...state, earnedBadgeIds: [...earned] }
 }
 
-export function getLevelTitle(level: number): string {
-  const titles: Record<number, string> = {
-    1: "Chart Curious",
-    2: "Candle Reader",
-    3: "Level Spotter",
-    4: "Setup Scout",
-    5: "Pattern Learner",
-  }
-  return titles[level] ?? `Level ${level} Trader`
-}
-
-export function getXpProgressPercent(progress: StoredUserProgress): number {
-  const currentLevelXp = (progress.level - 1) * 100
-  const nextLevelXp = progress.level * 100
-  const range = nextLevelXp - currentLevelXp
-  const current = progress.xp - currentLevelXp
-  return Math.min(100, Math.round((current / range) * 100))
-}
+export { getLevelTitle, getXpProgressPercent } from "@/lib/progression/levels"
 
 export function computeDashboardStats(state: UserState): UserProgress {
   const snapshot = progressSnapshot(state)
@@ -648,6 +663,13 @@ export {
 } from "./book-lab"
 
 export {
+  computeLibraryStats,
+  computeLibraryBookStats,
+  computeAllLibraryBookStats,
+  getLibraryBook,
+} from "./library"
+
+export {
   computeFlashcardStats,
   completeFlashcardSession,
   recordFlashcardReview,
@@ -701,6 +723,13 @@ export {
 } from "./trader-readiness"
 
 export {
+  computeSimulatorStats,
+  recordSimulatorAttempt,
+  isSimulatorStageUnlocked,
+  getInitialSimulatorState,
+} from "./simulator"
+
+export {
   calculateDailyStreak,
   calculateWeeklyStreak,
   calculateWeeklyTargetProgress,
@@ -713,5 +742,7 @@ export {
   extractMotivationEvents,
   getDateKey,
 } from "./activity"
+
+export { resetSection, type ResetSection } from "./reset"
 
 export type { MotivationEvent, ActivityLogItem } from "./types"

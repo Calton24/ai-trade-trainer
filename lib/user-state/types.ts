@@ -3,6 +3,9 @@ import type { StoredFlashcardState } from "@/lib/flashcards/types"
 import type { StoredStrategyWikiState } from "@/lib/strategy-wiki/types"
 import type { StoredTrendSpotterState } from "@/lib/trend-spotter/types"
 import type { StoredTraderReadinessState } from "@/lib/trader-readiness/types"
+import type { LivePhaseState } from "@/lib/competence/types"
+import { getDefaultPhaseState } from "@/lib/competence/live-trading-phases"
+import type { StoredSimulatorState } from "@/lib/simulator/types"
 
 export interface StoredLessonProgress {
   lessonId: string
@@ -83,6 +86,27 @@ export interface StoredUserProgress {
   pathProgress: Record<string, number>
 }
 
+export interface StoredGamificationState {
+  /** Highest trader rank tier ever reached (monotonic — never decreases). */
+  highestRankTier: number
+  earnedAchievementIds: string[]
+  /** Challenge instance ids whose reward has been granted. */
+  claimedChallengeIds: string[]
+  lastLoginDate: string | null
+  /** Cumulative XP earned from achievement bonuses (for transparency). */
+  bonusXp: number
+}
+
+export function getInitialGamificationState(): StoredGamificationState {
+  return {
+    highestRankTier: 1,
+    earnedAchievementIds: [],
+    claimedChallengeIds: [],
+    lastLoginDate: null,
+    bonusXp: 0,
+  }
+}
+
 export type ActivityType =
   | "lesson-complete"
   | "quiz-complete"
@@ -101,6 +125,7 @@ export type ActivityType =
   | "strategy-challenge-complete"
   | "readiness-assessment-complete"
   | "readiness-pillar-complete"
+  | "simulator-session-complete"
 
 export type ActivitySource =
   | "paths"
@@ -113,6 +138,7 @@ export type ActivitySource =
   | "trend-spotter"
   | "strategy-wiki"
   | "trader-readiness"
+  | "simulator"
 
 export interface ActivityLogItem {
   id: string
@@ -151,6 +177,16 @@ export type MotivationEvent =
   | { type: "weekly-target-hit"; weeksStreak: number }
   | { type: "weekly-target-prompt" }
   | { type: "badge-unlocked"; badgeId: string; badgeName: string }
+  | { type: "rank-up"; tier: number; title: string; insignia: string }
+  | {
+      type: "achievement-unlocked"
+      achievementId: string
+      name: string
+      icon: string
+      bonusXp: number
+    }
+  | { type: "challenge-complete"; period: string; rewardXp: number }
+  | { type: "xp-awarded"; amount: number; reason: string }
 
 export interface StoredLearningMapState {
   foundationCelebrated: boolean
@@ -182,6 +218,9 @@ export interface UserState {
   strategyWiki: StoredStrategyWikiState
   learningMap: StoredLearningMapState
   traderReadiness: StoredTraderReadinessState
+  liveTradingPhase: LivePhaseState
+  simulator: StoredSimulatorState
+  gamification: StoredGamificationState
 }
 
 export const STORAGE_KEYS = {
@@ -209,4 +248,8 @@ export const STORAGE_KEYS = {
   stageProgress: "tradetrainer_stage_progress",
   masteryScores: "tradetrainer_mastery_scores",
   traderReadiness: "tradetrainer_trader_readiness",
+  liveTradingPhase: "tradetrainer_live_trading_phase",
+  progressArchives: "tradetrainer_progress_archives",
+  simulator: "tradetrainer_simulator",
+  gamification: "tradetrainer_gamification",
 } as const

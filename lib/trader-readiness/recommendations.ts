@@ -40,7 +40,7 @@ const PILLAR_RECOMMENDATIONS: Record<
   },
   "risk-management": {
     focus: "Risk Management Module",
-    href: "/book-lab/risk-money-management",
+    href: "/library/day-trading-for-a-living",
     actions: [
       "Review risk management flashcards",
       "Complete position sizing drills",
@@ -49,7 +49,7 @@ const PILLAR_RECOMMENDATIONS: Record<
   },
   psychology: {
     focus: "Emotional Discipline Path",
-    href: "/book-lab/psychology-discipline",
+    href: "/library/trading-in-the-zone",
     actions: [
       "Complete 3 psychology drills",
       "Review emotional discipline flashcards",

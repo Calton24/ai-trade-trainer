@@ -14,11 +14,11 @@ export interface FeatureUnlockRule {
 export const FEATURE_UNLOCK_RULES: FeatureUnlockRule[] = [
   {
     id: "feature-book-lab-starter",
-    title: "Book Lab Foundations",
+    title: "Trading Library",
     requiredNodeIds: [],
     reason: "Day trading foundations are available from the start.",
     lockedMessage: "",
-    href: "/book-lab",
+    href: "/library",
   },
   {
     id: "feature-flashcards-candlesticks",

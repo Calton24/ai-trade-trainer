@@ -1,32 +1,32 @@
-/**
- * Supabase server client for App Router — wire up for auth and data fetching.
- *
- * Install: npm install @supabase/supabase-js @supabase/ssr
- *
- * import { createServerClient } from "@supabase/ssr"
- * import { cookies } from "next/headers"
- *
- * export async function createClient() {
- *   const cookieStore = await cookies()
- *   return createServerClient(
- *     process.env.NEXT_PUBLIC_SUPABASE_URL!,
- *     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
- *     {
- *       cookies: {
- *         getAll() { return cookieStore.getAll() },
- *         setAll(cookiesToSet) {
- *           cookiesToSet.forEach(({ name, value, options }) =>
- *             cookieStore.set(name, value, options)
- *           )
- *         },
- *       },
- *     }
- *   )
- * }
- */
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+
+import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./config"
 
 export async function createClient() {
-  throw new Error(
-    "Supabase not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local"
-  )
+  if (!isSupabaseConfigured()) {
+    throw new Error(
+      "Supabase not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local"
+    )
+  }
+
+  const cookieStore = await cookies()
+
+  return createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) =>
+          cookieStore.set(name, value, options)
+        )
+      },
+    },
+  })
+}
+
+export async function createClientIfConfigured() {
+  if (!isSupabaseConfigured()) return null
+  return createClient()
 }
