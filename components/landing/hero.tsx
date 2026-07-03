@@ -22,11 +22,7 @@ const VALUE_PROPS = [
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.72_0.19_145/0.18),transparent)]" />
-      <div className="pointer-events-none absolute -top-24 right-0 size-72 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 size-64 rounded-full bg-sky-500/10 blur-3xl" />
-
+    <section className="relative">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-16 lg:py-28">
         <Reveal>
           <div className="flex flex-col items-start text-left">
@@ -68,9 +64,9 @@ export function Hero() {
               <Button
                 size="lg"
                 variant="outline"
-                render={<Link href="/#journey" />}
+                render={<Link href="/#roadmap" />}
               >
-                See how it works
+                See the roadmap
               </Button>
             </div>
 

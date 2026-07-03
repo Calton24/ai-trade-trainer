@@ -124,7 +124,7 @@ export function InteractiveLearningPath() {
   return (
     <section
       ref={sectionRef}
-      id="journey"
+      id="roadmap"
       className="scroll-mt-20 border-t border-border/60 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -134,13 +134,13 @@ export function InteractiveLearningPath() {
               variant="secondary"
               className="mb-4 border-primary/20 bg-primary/10 text-primary"
             >
-              Your learning journey
+              Roadmap
             </Badge>
             <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              A clear path from beginner to ready
+              From complete beginner to competent trader
             </h2>
             <p className="mt-4 text-lg text-muted-foreground text-pretty">
-              Tap any step to explore the journey — learn, practice, test, and
+              Tap any step to explore the roadmap — learn, practice, test, and
               build competence before you trade live.
             </p>
           </div>
@@ -158,7 +158,7 @@ export function InteractiveLearningPath() {
                   viewBox={`0 0 ${DESKTOP_VB.w} ${DESKTOP_VB.h}`}
                   className="absolute inset-0 h-full w-full overflow-visible"
                   role="img"
-                  aria-label="Interactive learning path from start to live-trading readiness"
+                  aria-label="Interactive roadmap from start to live-trading readiness"
                 >
                   <defs>
                     <linearGradient

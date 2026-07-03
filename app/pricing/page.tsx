@@ -18,7 +18,7 @@ export default function PricingPage() {
   const privateBeta = isPrivateBetaEnabled()
 
   return (
-    <div className="min-h-svh bg-background">
+    <div className="min-h-svh">
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28">
         {privateBeta ? (

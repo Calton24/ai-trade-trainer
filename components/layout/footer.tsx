@@ -1,13 +1,13 @@
 import Link from "next/link"
-import { TrendingUpIcon } from "lucide-react"
 
+import { BrandMark } from "@/components/layout/brand-mark"
 import { isPrivateBetaEnabled } from "@/lib/config/private-beta"
 
 const PLATFORM_LINKS = [
-  { href: "/#features", label: "Features" },
-  { href: "/#journey", label: "Journey" },
-  { href: "/#plans", label: "Plans" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/#curriculum", label: "Curriculum" },
+  { href: "/#practice", label: "Practice" },
+  { href: "/#roadmap", label: "Roadmap" },
+  { href: "/#pricing", label: "Pricing" },
 ]
 
 const LEGAL_LINKS = [
@@ -18,6 +18,7 @@ const LEGAL_LINKS = [
 ]
 
 export function Footer() {
+  // Keep in-page #pricing during private beta; hide only the /pricing route.
   const platformLinks = isPrivateBetaEnabled()
     ? PLATFORM_LINKS.filter((link) => link.href !== "/pricing")
     : PLATFORM_LINKS
@@ -29,7 +30,7 @@ export function Footer() {
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5">
               <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-                <TrendingUpIcon className="text-primary" />
+                <BrandMark className="size-5" />
               </div>
               <span className="font-semibold tracking-tight">
                 TradeTrainer <span className="text-primary">Academy</span>

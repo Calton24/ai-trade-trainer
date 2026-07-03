@@ -69,13 +69,14 @@ export function getInitials(name: string): string {
   return (parts[0]?.[0] ?? "T").toUpperCase()
 }
 
+/** Muted glass-friendly tones — sit quietly on dark UI without neon accents. */
 const AVATAR_PALETTE = [
-  "bg-sky-500/25 text-sky-300 ring-sky-500/30",
-  "bg-emerald-500/25 text-emerald-300 ring-emerald-500/30",
-  "bg-violet-500/25 text-violet-300 ring-violet-500/30",
-  "bg-amber-500/25 text-amber-300 ring-amber-500/30",
-  "bg-rose-500/25 text-rose-300 ring-rose-500/30",
-  "bg-cyan-500/25 text-cyan-300 ring-cyan-500/30",
+  "bg-zinc-500/20 text-zinc-300 ring-zinc-400/25",
+  "bg-zinc-600/25 text-zinc-200 ring-zinc-500/20",
+  "bg-slate-500/20 text-slate-300 ring-slate-400/25",
+  "bg-neutral-500/20 text-neutral-300 ring-neutral-400/25",
+  "bg-stone-500/20 text-stone-300 ring-stone-400/25",
+  "bg-zinc-700/30 text-zinc-300 ring-zinc-500/20",
 ] as const
 
 export function getAvatarColorClass(seed: string): string {

@@ -11,6 +11,7 @@ import { AuthProvider } from "@/components/providers/auth-provider"
 import { RouteGuard } from "@/components/providers/route-guard"
 import { SubscriptionProvider } from "@/components/providers/subscription-provider"
 import { UserStateProvider } from "@/components/providers/user-state-provider"
+import { AmbientBackground } from "@/components/layout/ambient-background"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
@@ -59,25 +60,28 @@ export default function RootLayout({
         geist.variable
       )}
     >
-      <body>
-        <ThemeProvider defaultTheme="dark" forcedTheme="dark">
-          <TooltipProvider>
-            <AuthProvider>
-              <AnalyticsProvider>
-                <Suspense fallback={null}>
-                  <ReferralCapture />
-                </Suspense>
-                <SubscriptionProvider>
-                  <MotivationProvider>
-                    <UserStateProvider>
-                      <RouteGuard>{children}</RouteGuard>
-                    </UserStateProvider>
-                  </MotivationProvider>
-                </SubscriptionProvider>
-              </AnalyticsProvider>
-            </AuthProvider>
-          </TooltipProvider>
-        </ThemeProvider>
+      <body className="min-h-svh bg-background">
+        <AmbientBackground />
+        <div className="relative z-10 min-h-svh">
+          <ThemeProvider defaultTheme="dark" forcedTheme="dark">
+            <TooltipProvider>
+              <AuthProvider>
+                <AnalyticsProvider>
+                  <Suspense fallback={null}>
+                    <ReferralCapture />
+                  </Suspense>
+                  <SubscriptionProvider>
+                    <MotivationProvider>
+                      <UserStateProvider>
+                        <RouteGuard>{children}</RouteGuard>
+                      </UserStateProvider>
+                    </MotivationProvider>
+                  </SubscriptionProvider>
+                </AnalyticsProvider>
+              </AuthProvider>
+            </TooltipProvider>
+          </ThemeProvider>
+        </div>
       </body>
     </html>
   )

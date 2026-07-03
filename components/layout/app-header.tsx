@@ -1,9 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { TrendingUpIcon } from "lucide-react"
-
 import { AuthHeaderActions } from "@/components/layout/auth-header-actions"
+import { BrandMark } from "@/components/layout/brand-mark"
 import { StreakIndicator } from "@/components/habits/streak-indicator"
 import { cn } from "@/lib/utils"
 
@@ -29,7 +28,7 @@ export function AppHeader({ variant = "marketing" }: AppHeaderProps) {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-            <TrendingUpIcon className="text-primary" />
+            <BrandMark className="size-5" />
           </div>
           <span className="font-semibold tracking-tight">
             TradeTrainer <span className="text-primary">Academy</span>

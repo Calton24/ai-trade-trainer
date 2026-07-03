@@ -25,16 +25,9 @@ import {
   UsersIcon,
 } from "lucide-react"
 
+import { BrandMark } from "@/components/layout/brand-mark"
 import { cn } from "@/lib/utils"
 import { isPrivateBetaEnabled } from "@/lib/config/private-beta"
-
-const MOBILE_NAV_HREFS = [
-  "/dashboard",
-  "/learning-map",
-  "/simulator",
-  "/chart-lab",
-  "/journal",
-] as const
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboardIcon }
 
@@ -98,11 +91,81 @@ const navSections: { title: string; items: NavItem[] }[] = [
   },
 ]
 
-const allNavItems = navSections.flatMap((s) => s.items)
+function matchesPrefix(pathname: string, prefixes: string[]) {
+  return prefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  )
+}
 
-const mobileNavItems = MOBILE_NAV_HREFS.map(
-  (href) => allNavItems.find((item) => item.href === href)!
-)
+/** Intent-based mobile tabs — not a mirror of the desktop sidebar. */
+const MOBILE_TABS = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboardIcon,
+    isActive: (pathname: string) => matchesPrefix(pathname, ["/dashboard"]),
+  },
+  {
+    href: "/learning-map",
+    label: "Learn",
+    icon: MapIcon,
+    isActive: (pathname: string) =>
+      matchesPrefix(pathname, [
+        "/learning-map",
+        "/paths",
+        "/learn",
+        "/library",
+        "/flashcards",
+        "/quizzes",
+        "/quiz",
+      ]),
+  },
+  {
+    href: "/chart-lab",
+    label: "Practice",
+    icon: CandlestickChartIcon,
+    isActive: (pathname: string) => {
+      if (pathname.startsWith("/simulator/performance")) return false
+      return matchesPrefix(pathname, [
+        "/chart-lab",
+        "/trend-spotter",
+        "/strategy-wiki",
+        "/simulator",
+        "/trader-readiness",
+      ])
+    },
+  },
+  {
+    href: "/journal",
+    label: "Journal",
+    icon: BookOpenIcon,
+    isActive: (pathname: string) =>
+      matchesPrefix(pathname, [
+        "/journal",
+        "/performance",
+        "/live-progression",
+        "/simulator/performance",
+        "/progression/live-transition",
+      ]),
+  },
+  {
+    href: "/profile",
+    label: "Profile",
+    icon: UserIcon,
+    isActive: (pathname: string) => {
+      if (pathname.startsWith("/progression/live-transition")) return false
+      return matchesPrefix(pathname, [
+        "/profile",
+        "/progression",
+        "/leaderboard",
+        "/settings",
+        "/pricing",
+        "/progress",
+        "/community",
+      ])
+    },
+  },
+] as const
 
 export function SidebarNav() {
   const pathname = usePathname()
@@ -114,7 +177,7 @@ export function SidebarNav() {
     }))
   }, [])
 
-  const isActive = (href: string) => {
+  const isSidebarActive = (href: string) => {
     if (href === "/progression") {
       return pathname === "/progression"
     }
@@ -130,10 +193,11 @@ export function SidebarNav() {
 
   return (
     <>
+      {/* Desktop sidebar — unchanged full nav */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border/60 bg-card/50 backdrop-blur-xl lg:flex">
         <div className="flex h-16 items-center gap-2.5 border-b border-border/60 px-6">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-            <TrendingUpIcon className="text-primary" />
+            <BrandMark className="size-5" />
           </div>
           <Link href="/" className="font-semibold tracking-tight">
             TradeTrainer <span className="text-primary">Academy</span>
@@ -148,7 +212,7 @@ export function SidebarNav() {
                 </p>
               )}
               {section.items.map((item) => {
-                const active = isActive(item.href)
+                const active = isSidebarActive(item.href)
                 const Icon = item.icon
                 return (
                   <Link
@@ -176,24 +240,49 @@ export function SidebarNav() {
         </div>
       </aside>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border/60 bg-card/95 backdrop-blur-xl lg:hidden">
-        {mobileNavItems.map((item) => {
-          const active = isActive(item.href)
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-3 text-xs",
-                active ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              <Icon />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          )
-        })}
+      {/* Mobile liquid-glass tab bar — 5 intent tabs */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 px-3 pt-2 lg:hidden"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+        }}
+        aria-label="Primary"
+      >
+        <div
+          className={cn(
+            "mx-auto flex max-w-lg items-stretch gap-0.5 rounded-2xl border border-white/10",
+            "bg-card/55 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-2xl",
+            "supports-[backdrop-filter]:bg-card/40"
+          )}
+        >
+          {MOBILE_TABS.map((tab) => {
+            const active = tab.isActive(pathname)
+            const Icon = tab.icon
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={cn(
+                  "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium leading-tight transition-colors sm:text-[11px]",
+                  active
+                    ? "text-primary"
+                    : "text-muted-foreground active:text-foreground"
+                )}
+                aria-current={active ? "page" : undefined}
+              >
+                <span
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-xl transition-colors",
+                    active && "bg-primary/15 ring-1 ring-primary/25"
+                  )}
+                >
+                  <Icon className="size-5" aria-hidden />
+                </span>
+                <span className="max-w-full truncate">{tab.label}</span>
+              </Link>
+            )
+          })}
+        </div>
       </nav>
     </>
   )

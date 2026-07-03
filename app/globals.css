@@ -193,14 +193,67 @@
   stroke-dashoffset: 0;
 }
 
+/* Brand mark — line draws upward to suggest progression */
+@keyframes brand-mark-draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0.25;
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  78% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 1;
+    opacity: 0.25;
+  }
+}
+
+@keyframes brand-mark-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  55%,
+  78% {
+    filter: drop-shadow(0 0 6px oklch(0.72 0.19 145 / 0.55));
+  }
+}
+
+.brand-mark {
+  animation: brand-mark-glow 2.6s ease-in-out infinite;
+}
+
+.brand-mark-line,
+.brand-mark-arrow {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: brand-mark-draw 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.brand-mark-arrow {
+  animation-delay: 0.22s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-reveal,
   .landing-float,
-  .landing-path-line {
+  .landing-path-line,
+  .brand-mark,
+  .brand-mark-line,
+  .brand-mark-arrow {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
     stroke-dashoffset: 0 !important;
+    filter: none !important;
   }
 }

@@ -137,15 +137,15 @@ const FEATURES = [
 export function EverythingIncluded() {
   return (
     <section
-      id="features"
+      id="curriculum"
       className="scroll-mt-20 border-t border-border/60 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
           <SectionHeading
-            eyebrow="Everything included"
-            title="One platform for the entire journey"
-            description="From your first candle to live-trading readiness — every tool you need to learn, practice, and prove competence."
+            eyebrow="Curriculum"
+            title="Everything you need to learn trading"
+            description="Lessons, library, flashcards, and quizzes — a full curriculum from your first candle to live-trading readiness."
           />
         </Reveal>
         <div className="mt-14 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -225,7 +225,10 @@ export function BooksIncluded() {
 
 export function PracticePreview() {
   return (
-    <section className="border-t border-border/60 py-20 sm:py-28">
+    <section
+      id="practice"
+      className="scroll-mt-20 border-t border-border/60 py-20 sm:py-28"
+    >
       <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-2">
         <Reveal>
           <div className="flex h-full flex-col justify-center rounded-2xl border border-border/60 bg-card/40 p-8 transition-colors hover:border-primary/30">

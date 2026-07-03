@@ -1,5 +1,9 @@
-/** XP thresholds per level (cumulative). */
-export const LEVEL_XP_THRESHOLDS = [0, 0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 3800]
+/**
+ * Cumulative XP required to *reach* each level (index 0 = Level 1).
+ * Level 1 starts at 0 XP — do not duplicate the leading 0 or levelFromXP(0)
+ * incorrectly returns Level 2.
+ */
+export const LEVEL_XP_THRESHOLDS = [0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 3800]
 
 /**
  * Central XP catalog. Every meaningful action earns XP from here so the

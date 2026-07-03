@@ -2,16 +2,7 @@ import { cn } from "@/lib/utils"
 
 /** Shared glassmorphism tokens for the onboarding flow. */
 export const onboardingGlass = {
-  shell:
-    "relative min-h-svh overflow-hidden bg-background",
-  ambient:
-    "pointer-events-none absolute inset-0 overflow-hidden",
-  orbPrimary:
-    "absolute -left-24 top-0 size-72 rounded-full bg-primary/20 blur-3xl",
-  orbSecondary:
-    "absolute -right-16 top-40 size-96 rounded-full bg-primary/10 blur-3xl",
-  orbBottom:
-    "absolute bottom-0 left-1/3 size-80 rounded-full bg-emerald-500/10 blur-3xl",
+  shell: "relative min-h-svh overflow-x-hidden",
 
   header:
     "relative z-10 border-b border-white/10 bg-background/40 backdrop-blur-xl",

@@ -11,9 +11,14 @@ import { Skeleton } from "@/components/ui/skeleton"
 interface AuthHeaderActionsProps {
   /** Show "Try a Drill" CTA when logged out (app shell). */
   showDrillCta?: boolean
+  /** Marketing landing CTA: "Start Learning Free" instead of "Sign Up". */
+  marketingCta?: boolean
 }
 
-export function AuthHeaderActions({ showDrillCta = false }: AuthHeaderActionsProps) {
+export function AuthHeaderActions({
+  showDrillCta = false,
+  marketingCta = false,
+}: AuthHeaderActionsProps) {
   const { isAuthenticated, loading } = useAuth()
   const pathname = usePathname()
   const isAuthPage =
@@ -58,7 +63,7 @@ export function AuthHeaderActions({ showDrillCta = false }: AuthHeaderActionsPro
         Sign In
       </Button>
       <Button size="sm" render={<Link href="/sign-up" />}>
-        Sign Up
+        {marketingCta ? "Start Learning Free" : "Sign Up"}
       </Button>
     </>
   )
