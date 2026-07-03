@@ -29,9 +29,9 @@ export function StreakIndicator() {
     return (
       <Link
         href="/paths/trading-foundations"
-        className="hidden items-center gap-1.5 rounded-lg border border-dashed border-border/60 px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground sm:flex"
+        className="hidden h-[42px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs text-zinc-400 transition-colors hover:bg-white/[0.08] hover:text-zinc-100 sm:flex"
       >
-        <FlameIcon className="size-3.5 opacity-50" />
+        <FlameIcon className="size-3.5 opacity-60" />
         Start your streak
       </Link>
     )
@@ -42,23 +42,21 @@ export function StreakIndicator() {
       <button
         type="button"
         className={cn(
-          "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm transition-colors",
-          todayDone
-            ? "border-primary/20 bg-primary/5 text-primary"
-            : "border-border/60 bg-card/50 text-muted-foreground"
+          "flex h-[42px] items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 text-sm transition-colors hover:bg-white/[0.08]",
+          todayDone ? "text-primary" : "text-zinc-400"
         )}
       >
         <FlameIcon className={cn("size-4", todayDone && "text-primary")} />
         <span className="hidden sm:inline">
           {streak > 0 ? `${streak} day streak` : "Keep streak alive"}
         </span>
-        <span className="flex items-center gap-1 border-l border-border/60 pl-2 text-xs">
+        <span className="flex items-center gap-1 border-l border-white/10 pl-2 text-xs text-zinc-500">
           <SparklesIcon className="size-3" />
           {globalSnapshot.xp} XP
         </span>
       </button>
 
-      <div className="invisible absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-border/60 bg-card/95 p-4 opacity-0 shadow-xl backdrop-blur-xl transition-all group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+      <div className="invisible absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-white/10 bg-zinc-950/90 p-4 opacity-0 shadow-xl backdrop-blur-2xl transition-all group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
         <div className="flex items-center gap-2 text-primary">
           <FlameIcon className="size-4" />
           <span className="text-sm font-medium">
