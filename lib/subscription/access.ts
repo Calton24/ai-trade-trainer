@@ -112,12 +112,14 @@ export function hasActiveAdminGrant(
   grant: AdminGrant | null | undefined
 ): boolean {
   if (!grant) return false
-  if (grant.status !== "active") return false
+  if (String(grant.status).toLowerCase() !== "active") return false
   if (grant.revokedAt) return false
 
   const now = Date.now()
-  const startsMs = new Date(grant.startsAt).getTime()
-  if (Number.isFinite(startsMs) && startsMs > now) return false
+  if (grant.startsAt) {
+    const startsMs = new Date(grant.startsAt).getTime()
+    if (Number.isFinite(startsMs) && startsMs > now) return false
+  }
 
   if (grant.expiresAt) {
     const expiresMs = new Date(grant.expiresAt).getTime()
@@ -133,9 +135,11 @@ export function resolveProAccessSource(
   subscription: UserSubscription | null | undefined,
   adminGrant?: AdminGrant | null
 ): ProAccessSource {
-  if (isDevProUnlockEnabled()) return "dev_unlock"
+  // Prefer real entitlements over the local dev bypass so billing UI can show
+  // Beta Pro / Stripe plan correctly even when ENABLE_DEV_PRO_UNLOCK is on.
   if (hasActiveStripeSubscription(subscription)) return "stripe"
   if (hasActiveAdminGrant(adminGrant)) return "admin_grant"
+  if (isDevProUnlockEnabled()) return "dev_unlock"
   return "none"
 }
 

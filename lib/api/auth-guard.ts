@@ -64,7 +64,10 @@ export async function requireProUser(): Promise<GuardResult> {
   const authResult = await requireAuth()
   if (!authResult.ok) return authResult
 
-  const entitlement = await getEntitlementStatus(authResult.user.id)
+  const entitlement = await getEntitlementStatus(
+    authResult.user.id,
+    authResult.supabase
+  )
 
   if (!entitlement.hasPro) {
     return { ok: false, response: forbidden("Pro subscription required.") }

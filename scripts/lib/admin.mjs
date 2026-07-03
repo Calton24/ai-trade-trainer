@@ -45,10 +45,44 @@ export function loadEnv() {
   return { url, serviceKey }
 }
 
+/**
+ * Node 20 has no native WebSocket. Admin scripts only use Auth Admin + REST
+ * (PostgREST) — never Realtime — so we pass a no-op transport and avoid
+ * installing `ws` or requiring Node 22+.
+ */
+class NoopWebSocket {
+  static CONNECTING = 0
+  static OPEN = 1
+  static CLOSING = 2
+  static CLOSED = 3
+  readyState = NoopWebSocket.CLOSED
+  bufferedAmount = 0
+  extensions = ""
+  protocol = ""
+  url = ""
+  onclose = null
+  onerror = null
+  onmessage = null
+  onopen = null
+  close() {}
+  send() {}
+  addEventListener() {}
+  removeEventListener() {}
+  dispatchEvent() {
+    return false
+  }
+}
+
 export function createScriptAdmin() {
   const { url, serviceKey } = loadEnv()
   return createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    realtime: {
+      transport: NoopWebSocket,
+    },
   })
 }
 

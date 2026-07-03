@@ -48,13 +48,12 @@ export async function fetchActiveAdminGrant(
     .maybeSingle()
 
   if (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("[admin-grant] fetch failed", {
-        userId,
-        message: error.message,
-        code: error.code,
-      })
-    }
+    console.error("[admin-grant] fetch failed", {
+      userId,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+    })
     return null
   }
 

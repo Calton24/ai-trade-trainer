@@ -1,38 +1,146 @@
 import { NextResponse } from "next/server"
 
 import { requireAuth } from "@/lib/api/auth-guard"
-import { getEntitlementStatus } from "@/lib/subscription/server"
+import { fetchActiveAdminGrant } from "@/lib/data/admin-grant-service"
+import { fetchUserSubscription } from "@/lib/data/subscription-service"
+import { getBillingStatus } from "@/lib/subscription/server"
+import { createAdminClient, isAdminConfigured } from "@/lib/supabase/admin"
+
+function freeBillingFallback() {
+  return {
+    planLabel: "Free",
+    statusLabel: "Inactive",
+    isPro: false,
+    source: "free" as const,
+    currentPeriodEnd: null,
+    grantExpiresAt: null,
+    grantReason: null,
+    cancelAtPeriodEnd: false,
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    canManageStripe: false,
+    sourceLabel: null,
+    subscription: null,
+    adminGrant: null,
+    proSource: "none" as const,
+  }
+}
 
 /**
- * Trusted subscription read for the signed-in user.
+ * Trusted billing / entitlement read for the signed-in user.
  *
- * Uses the service-role client server-side (same path as the Stripe webhook
- * write) so billing UI and post-checkout polling are not blocked by RLS or
- * browser-session quirks on direct `user_subscriptions` reads.
+ * Uses service-role when available, and always falls back to the
+ * request-scoped user client (same path as middleware Pro gating).
+ * Never throws an unhandled exception to the client.
  */
 export async function GET() {
-  const authResult = await requireAuth()
-  if (!authResult.ok) return authResult.response
+  try {
+    const authResult = await requireAuth()
+    if (!authResult.ok) return authResult.response
 
-  const { user } = authResult
-  const entitlement = await getEntitlementStatus(user.id)
+    const { user, supabase } = authResult
 
-  if (process.env.NODE_ENV === "development") {
-    console.debug("[subscription/status]", {
+    let admin = null
+    if (isAdminConfigured()) {
+      try {
+        admin = createAdminClient()
+      } catch (error) {
+        console.error("[billing/status] admin client failed", error)
+      }
+    }
+
+    const [rawSubAdmin, rawGrantAdmin, rawSubUser, rawGrantUser] =
+      await Promise.all([
+        admin
+          ? fetchUserSubscription(admin, user.id).catch((error) => {
+              console.error("[billing/status] admin subscription fetch", error)
+              return null
+            })
+          : Promise.resolve(null),
+        admin
+          ? fetchActiveAdminGrant(admin, user.id).catch((error) => {
+              console.error("[billing/status] admin grant fetch", error)
+              return null
+            })
+          : Promise.resolve(null),
+        fetchUserSubscription(supabase, user.id).catch((error) => {
+          console.error("[billing/status] user subscription fetch", error)
+          return null
+        }),
+        fetchActiveAdminGrant(supabase, user.id).catch((error) => {
+          console.error("[billing/status] user grant fetch", error)
+          return null
+        }),
+      ])
+
+    console.log("[billing/status] user", {
       userId: user.id,
-      plan: entitlement.subscription?.plan ?? "free",
-      status: entitlement.subscription?.status ?? "inactive",
-      hasPro: entitlement.hasPro,
-      proSource: entitlement.proSource,
-      adminGrantExpiresAt: entitlement.adminGrant?.expiresAt ?? null,
+      email: user.email ?? null,
+      adminConfigured: Boolean(admin),
     })
-  }
+    console.log("[billing/status] subscription row", {
+      admin: rawSubAdmin
+        ? { plan: rawSubAdmin.plan, status: rawSubAdmin.status }
+        : null,
+      user: rawSubUser
+        ? { plan: rawSubUser.plan, status: rawSubUser.status }
+        : null,
+    })
+    console.log("[billing/status] grant row", {
+      admin: rawGrantAdmin
+        ? {
+            id: rawGrantAdmin.id,
+            status: rawGrantAdmin.status,
+            expiresAt: rawGrantAdmin.expiresAt,
+            revokedAt: rawGrantAdmin.revokedAt,
+            reason: rawGrantAdmin.reason,
+          }
+        : null,
+      user: rawGrantUser
+        ? {
+            id: rawGrantUser.id,
+            status: rawGrantUser.status,
+            expiresAt: rawGrantUser.expiresAt,
+            revokedAt: rawGrantUser.revokedAt,
+            reason: rawGrantUser.reason,
+          }
+        : null,
+    })
 
-  return NextResponse.json({
-    subscription: entitlement.subscription,
-    adminGrant: entitlement.adminGrant,
-    hasPro: entitlement.hasPro,
-    proSource: entitlement.proSource,
-    userId: user.id,
-  })
+    const billing = await getBillingStatus(user.id, supabase)
+
+    console.log("[billing/status] final result", {
+      source: billing.source,
+      planLabel: billing.planLabel,
+      statusLabel: billing.statusLabel,
+      isPro: billing.isPro,
+      grantExpiresAt: billing.grantExpiresAt,
+    })
+
+    return NextResponse.json({
+      billing,
+      subscription: billing.subscription,
+      adminGrant: billing.adminGrant,
+      hasPro: billing.isPro,
+      proSource: billing.proSource,
+      userId: user.id,
+    })
+  } catch (error) {
+    console.error("[billing/status] unhandled error", error)
+
+    // Last-resort free payload so the Billing UI never hard-fails.
+    const billing = freeBillingFallback()
+    return NextResponse.json(
+      {
+        billing,
+        subscription: null,
+        adminGrant: null,
+        hasPro: false,
+        proSource: "none",
+        userId: null,
+        error: "Billing status temporarily unavailable.",
+      },
+      { status: 200 }
+    )
+  }
 }

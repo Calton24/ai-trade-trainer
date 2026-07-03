@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { AlertTriangleIcon, CheckCircle2Icon, Loader2Icon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -10,20 +10,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useSubscription } from "@/components/providers/subscription-provider"
-import { planLabel, statusLabel } from "@/lib/subscription/access"
 import { isPrivateBetaEnabled } from "@/lib/config/private-beta"
-import { fetchSubscriptionStatus } from "@/lib/subscription/client"
+import {
+  fetchSubscriptionStatus,
+  type BillingStatus,
+} from "@/lib/subscription/client"
 import { PrivateBetaNotice } from "@/components/marketing/private-beta-notice"
 
 const POLL_INTERVAL_MS = 2000
-const POLL_MAX_ATTEMPTS = 15 // 30 seconds
+const POLL_MAX_ATTEMPTS = 15
 
 export function BillingSettingsPanel() {
   const { user } = useAuth()
-  const { subscription, loading, hasPro, proSource, adminGrant, refresh } =
-    useSubscription()
+  const { refresh: refreshProvider } = useSubscription()
   const searchParams = useSearchParams()
   const checkoutState = searchParams.get("checkout")
+
+  // Local server snapshot — never fall back to a stale provider Free state.
+  const [billing, setBilling] = useState<BillingStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState<string | null>(null)
   const [activationPending, setActivationPending] = useState(
@@ -32,6 +39,30 @@ export function BillingSettingsPanel() {
   const [activationDelayed, setActivationDelayed] = useState(false)
   const [webhookWarning, setWebhookWarning] = useState<string | null>(null)
   const polledRef = useRef(false)
+
+  const loadBilling = useCallback(async () => {
+    const status = await fetchSubscriptionStatus()
+    if (!status?.billing) {
+      setLoadError("Could not load billing status.")
+      setBilling(null)
+      return null
+    }
+    setLoadError(null)
+    setBilling(status.billing)
+    void refreshProvider()
+    return status
+  }, [refreshProvider])
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    void loadBilling().finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [loadBilling, user?.id])
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return
@@ -48,11 +79,11 @@ export function BillingSettingsPanel() {
   }, [])
 
   useEffect(() => {
-    if (hasPro) {
+    if (billing?.isPro) {
       setActivationPending(false)
       setActivationDelayed(false)
     }
-  }, [hasPro])
+  }, [billing?.isPro])
 
   useEffect(() => {
     if (checkoutState !== "success" || polledRef.current) return
@@ -62,21 +93,8 @@ export function BillingSettingsPanel() {
     let attempts = 0
 
     const pollOnce = async () => {
-      const status = await fetchSubscriptionStatus()
-
-      if (process.env.NODE_ENV === "development") {
-        console.debug("[billing]", {
-          sessionUserId: user?.id ?? null,
-          apiUserId: status?.userId ?? null,
-          plan: status?.subscription?.plan ?? "free",
-          subscriptionStatus: status?.subscription?.status ?? "inactive",
-          hasProAccess: status?.hasPro ?? false,
-        })
-      }
-
-      await refresh()
-
-      if (status?.hasPro) {
+      const status = await loadBilling()
+      if (status?.billing?.isPro) {
         setActivationPending(false)
         setActivationDelayed(false)
         return true
@@ -102,22 +120,38 @@ export function BillingSettingsPanel() {
     })
 
     return () => clearInterval(interval)
-  }, [checkoutState, refresh, user?.id])
+  }, [checkoutState, loadBilling])
 
   if (loading) return <Skeleton className="h-40 w-full rounded-xl" />
 
-  const plan =
-    proSource === "admin_grant"
-      ? "Beta Pro"
-      : planLabel(subscription?.plan ?? "free")
-  const status =
-    proSource === "admin_grant"
-      ? "Active"
-      : statusLabel(subscription?.status ?? "inactive")
-  const canManage =
-    proSource === "stripe" &&
-    subscription?.provider === "stripe" &&
-    subscription.providerCustomerId
+  if (!billing) {
+    return (
+      <Card className="border-border/60 bg-card/50">
+        <CardHeader>
+          <CardTitle className="text-base">Subscription</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-destructive">
+            {loadError ?? "Could not load billing status."}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setLoading(true)
+              void loadBilling().finally(() => setLoading(false))
+            }}
+          >
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const hasPro = billing.isPro
+  const isBetaGrant = billing.source === "admin_grant"
+  const isStripe = billing.source === "stripe"
+  const canManage = billing.canManageStripe
 
   const handleManage = async () => {
     setPortalLoading(true)
@@ -160,10 +194,20 @@ export function BillingSettingsPanel() {
           </div>
         )}
 
-        {checkoutState === "success" && hasPro && (
+        {checkoutState === "success" && hasPro && isStripe && (
           <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
             <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-primary" />
             <p>Your subscription is active. Pro features are now unlocked.</p>
+          </div>
+        )}
+
+        {isBetaGrant && (
+          <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+            <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-primary" />
+            <p>
+              Private beta access is active. Pro features are unlocked for your
+              account.
+            </p>
           </div>
         )}
 
@@ -180,14 +224,7 @@ export function BillingSettingsPanel() {
                   (session: <code className="text-xs">{user.id}</code>)
                 </>
               )}
-              . If the webhook is configured, try refreshing this page. Locally,
-              run{" "}
-              <code className="text-xs">
-                stripe listen --forward-to localhost:3000/api/stripe/webhook
-              </code>{" "}
-              and set <code className="text-xs">STRIPE_WEBHOOK_SECRET</code> in{" "}
-              <code className="text-xs">.env.local</code>, then restart the dev
-              server.
+              . Try refreshing this page.
             </p>
           </div>
         )}
@@ -200,45 +237,74 @@ export function BillingSettingsPanel() {
 
         <div className="rounded-xl border border-border/60 bg-background/40 p-4">
           <p className="text-sm text-muted-foreground">Current plan</p>
-          <p className="mt-1 text-2xl font-semibold">{plan}</p>
+          <p className="mt-1 text-2xl font-semibold">{billing.planLabel}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Status: {status}
+            Status: {billing.statusLabel}
           </p>
-          {proSource === "admin_grant" && adminGrant?.expiresAt && (
+          {billing.sourceLabel && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Beta access ends{" "}
-              {new Date(adminGrant.expiresAt).toLocaleDateString()}
+              Source: {billing.sourceLabel}
             </p>
           )}
-          {subscription?.currentPeriodEnd && hasPro && proSource === "stripe" && (
+          {isBetaGrant && billing.grantExpiresAt && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {status === "cancelled" ? "Access ends" : "Renews"}{" "}
-              {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+              Expires{" "}
+              {new Date(billing.grantExpiresAt).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </p>
+          )}
+          {isBetaGrant && billing.grantReason && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {billing.grantReason}
+            </p>
+          )}
+          {isStripe && billing.currentPeriodEnd && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {billing.cancelAtPeriodEnd ? "Access ends" : "Renews"}{" "}
+              {new Date(billing.currentPeriodEnd).toLocaleDateString()}
             </p>
           )}
         </div>
+
         <p className="text-sm text-muted-foreground">
-          {isPrivateBetaEnabled()
-            ? "Private beta — Pro access is invite-only. Paid plans open after beta."
-            : "Weekly, 6-month, and annual plans unlock the same Pro features. Cancel anytime — you keep access until the end of your current billing period."}
+          {isBetaGrant
+            ? "Your Pro access was granted for private beta. No payment is required."
+            : isPrivateBetaEnabled()
+              ? "Private beta — Pro access is invite-only. Paid plans open after beta."
+              : "Weekly, 6-month, and annual plans unlock the same Pro features. Cancel anytime — you keep access until the end of your current billing period."}
         </p>
-        {!hasPro && isPrivateBetaEnabled() && (
-          <PrivateBetaNotice compact />
-        )}
+
+        {!hasPro && isPrivateBetaEnabled() && <PrivateBetaNotice compact />}
+
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            disabled={!canManage || portalLoading}
-            onClick={() => void handleManage()}
-          >
-            {portalLoading && (
-              <Loader2Icon className="animate-spin" data-icon="inline-start" />
-            )}
-            Manage subscription
-          </Button>
+          {canManage && (
+            <Button
+              variant="outline"
+              disabled={portalLoading}
+              onClick={() => void handleManage()}
+            >
+              {portalLoading && (
+                <Loader2Icon className="animate-spin" data-icon="inline-start" />
+              )}
+              Manage subscription
+            </Button>
+          )}
           {!hasPro && !isPrivateBetaEnabled() && (
             <Button render={<Link href="/pricing" />}>Upgrade plan</Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setLoading(true)
+              void loadBilling().finally(() => setLoading(false))
+            }}
+          >
+            Refresh
+          </Button>
         </div>
         {portalError && (
           <p className="text-xs text-destructive">{portalError}</p>
