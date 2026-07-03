@@ -30,8 +30,6 @@ export function generateMockCandles(count = 60): Candle[] {
 }
 
 /** Generate mock OHLC candles for chart replay simulation */
-export { modules, getModuleById } from "./mock/modules"
-export { lessons, getLessonById, getLessonsByModuleId } from "./mock/lessons"
 export { drills, drillMarkMap, getDrillByType, getDrillById } from "./mock/drills"
 export { badgeDefinitions, getBadgeById } from "./mock/badges"
 export {
@@ -39,18 +37,7 @@ export {
   exampleDiscussionPrompts,
 } from "./mock/community-posts"
 export {
-  learningPaths,
-  pathSyllabus,
-  getPathById,
-  getSyllabusByPathId,
-  getSyllabusItemById,
-  getRelatedPaths,
-} from "./mock/learning-paths"
-export {
-  quizzes,
   quizDiscussionPrompts,
-  getQuizById,
-  getQuizzesByPathId,
   getDiscussionResponse,
-} from "./mock/quizzes"
+} from "./mock/quiz-discussion"
 export { getLevelTitle, getXpProgressPercent } from "./user-state"

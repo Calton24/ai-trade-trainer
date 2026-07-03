@@ -9,6 +9,14 @@ export interface XpEventInput {
   reason?: string
 }
 
+/**
+ * `xp_events` is entitlement/leaderboard-adjacent — as of migration 015,
+ * `authenticated` has no insert/update/delete privilege on it at all. Only
+ * call this with the service-role admin client (see
+ * `app/api/progress/sync-gamification/route.ts`), scoped to a
+ * server-verified `userId`. Never call this with a browser-supplied
+ * Supabase client or a client-supplied `userId`.
+ */
 export async function recordXpEvent(
   supabase: SupabaseClient,
   userId: string,
@@ -27,6 +35,12 @@ export async function recordXpEvent(
   })
 }
 
+/**
+ * `user_stats` is entitlement/leaderboard-adjacent — as of migration 015,
+ * `authenticated` has no insert/update privilege on it at all. Only call
+ * this with the service-role admin client, scoped to a server-verified
+ * `userId`. See `recordXpEvent` above for the same rule.
+ */
 export async function syncUserStats(
   supabase: SupabaseClient,
   userId: string,

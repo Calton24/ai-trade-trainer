@@ -89,6 +89,30 @@ export function getInitialProgress(): StoredUserProgress {
   }
 }
 
+/** Fresh user state — no localStorage reads. Use for authenticated cloud sessions. */
+export function createEmptyUserState(): UserState {
+  return {
+    progress: getInitialProgress(),
+    lessonProgress: [],
+    quizAttempts: [],
+    drillSessions: [],
+    journalEntries: [],
+    earnedBadgeIds: [],
+    bookLab: getInitialBookLabProgress(),
+    activityLog: [],
+    weeklyTarget: getInitialWeeklyTarget(),
+    weeklyStreak: getInitialWeeklyStreak(),
+    flashcards: getInitialFlashcardState(),
+    trendSpotter: getInitialTrendSpotterState(),
+    strategyWiki: getInitialStrategyWikiState(),
+    learningMap: getInitialLearningMapState(),
+    traderReadiness: getInitialTraderReadinessState(),
+    liveTradingPhase: getDefaultPhaseState(),
+    simulator: getInitialSimulatorState(),
+    gamification: getInitialGamificationState(),
+  }
+}
+
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback
   try {
@@ -339,6 +363,7 @@ export function saveQuizAttempt(
       title: quiz?.title ?? "Quiz",
       entityId: attempt.quizId,
       xpAwarded: xpToAward,
+      score: attempt.score,
     })
     next = withActivity
   }

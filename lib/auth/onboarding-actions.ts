@@ -9,6 +9,7 @@ import {
   saveOnboardingStep,
 } from "@/lib/data/onboarding-service"
 import type { OnboardingData, OnboardingStep } from "@/lib/onboarding/types"
+import { captureError } from "@/lib/observability/sentry"
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -62,12 +63,13 @@ export async function saveOnboardingStepAction(
     return { error: ctx.error ?? "Unauthorized" }
 
   const nextStep = advanceTo ?? step
-  const result = await saveOnboardingStep(
-    ctx.supabase,
-    ctx.userId,
-    nextStep,
-    data
-  )
+  let result: OnboardingActionResult
+  try {
+    result = await saveOnboardingStep(ctx.supabase, ctx.userId, nextStep, data)
+  } catch (error) {
+    captureError(error, { flow: "onboarding-save", step: nextStep, userId: ctx.userId })
+    return { error: "Could not save your progress. Please try again." }
+  }
   if (result.error) return result
 
   revalidatePath("/onboarding")
@@ -92,7 +94,13 @@ export async function finalizeOnboardingAction(
   if (ctx.error || !ctx.supabase || !ctx.userId)
     return { error: ctx.error ?? "Unauthorized" }
 
-  const result = await completeOnboarding(ctx.supabase, ctx.userId, data)
+  let result: OnboardingActionResult
+  try {
+    result = await completeOnboarding(ctx.supabase, ctx.userId, data)
+  } catch (error) {
+    captureError(error, { flow: "onboarding-finalize", userId: ctx.userId })
+    return { error: "Could not complete onboarding. Please try again." }
+  }
   if (result.error) return result
 
   const profile = await getOnboardingState(ctx.supabase, ctx.userId)

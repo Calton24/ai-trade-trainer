@@ -1,5 +1,6 @@
 "use client"
 
+import { AvatarUpload } from "@/components/settings/avatar-upload"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CountrySelect } from "@/components/shared/country-select"
@@ -36,9 +37,10 @@ const PLAN_OPTIONS: { value: LearningPlan; label: string; detail: string }[] = [
 const TARGET_OPTIONS = [1, 2, 3, 4, 5, 7]
 
 export function ProfileSettingsPanel() {
-  const { settings, setSettings, save, loading, saving, error } =
+  const { settings, setSettings, save, loading, saving, error, user, authMode } =
     useUserSettings()
   const p = settings.profile
+  const canUploadAvatar = authMode === "supabase" && Boolean(user)
 
   if (loading) {
     return (
@@ -113,24 +115,39 @@ export function ProfileSettingsPanel() {
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="avatarUrl">Avatar URL</Label>
-              <Input
-                id="avatarUrl"
-                value={p.avatarUrl ?? ""}
-                placeholder="https://..."
-                onChange={(e) =>
-                  setSettings((s) => ({
-                    ...s,
-                    profile: {
-                      ...s.profile,
-                      avatarUrl: e.target.value || null,
-                    },
-                  }))
-                }
-              />
-            </div>
+            {!canUploadAvatar && (
+              <div className="space-y-2">
+                <Label htmlFor="avatarUrl">Avatar URL</Label>
+                <Input
+                  id="avatarUrl"
+                  value={p.avatarUrl ?? ""}
+                  placeholder="https://..."
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      profile: {
+                        ...s.profile,
+                        avatarUrl: e.target.value || null,
+                      },
+                    }))
+                  }
+                />
+              </div>
+            )}
           </div>
+
+          {canUploadAvatar && user && (
+            <AvatarUpload
+              userId={user.id}
+              avatarUrl={p.avatarUrl}
+              onChange={(url) =>
+                setSettings((s) => ({
+                  ...s,
+                  profile: { ...s.profile, avatarUrl: url },
+                }))
+              }
+            />
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="experience">Experience level</Label>

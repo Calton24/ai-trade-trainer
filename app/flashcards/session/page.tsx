@@ -4,7 +4,7 @@ import { Suspense } from "react"
 import { FlashcardSession } from "@/components/flashcards/flashcard-session"
 
 export const metadata: Metadata = {
-  title: "Flashcard Session — TradeTrainer AI",
+  title: "Flashcard Session — TradeTrainer Academy",
   description: "Game of 10 flashcard review session.",
 }
 

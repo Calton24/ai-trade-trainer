@@ -13,7 +13,7 @@ export default function AuthLayout({
           <TrendingUpIcon className="text-primary" />
         </div>
         <span className="text-lg font-semibold tracking-tight">
-          TradeTrainer <span className="text-primary">AI</span>
+          TradeTrainer <span className="text-primary">Academy</span>
         </span>
       </Link>
       <div className="w-full max-w-md rounded-xl border border-border/60 bg-card/50 p-8">

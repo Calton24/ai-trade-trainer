@@ -1,18 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
+import type { ActivityFact } from "@/lib/gamification/types"
 import type { ActivityLogItem } from "@/lib/user-state/types"
-import { recordXpEvent } from "./xp-service"
 
 export interface ActivityCompletionInput {
   entityType: string
   entityId: string
   status?: "not_started" | "in_progress" | "completed"
   score?: number | null
-  xpAmount: number
-  source: string
-  reason?: string
 }
 
+/**
+ * `user_progress` is a normal user-owned progress table (RLS: owner can
+ * read/write their own rows freely) — safe to call with the browser's
+ * RLS-scoped Supabase client.
+ */
 export async function upsertUserProgress(
   supabase: SupabaseClient,
   userId: string,
@@ -34,45 +36,42 @@ export async function upsertUserProgress(
   )
 }
 
-export async function recordActivityCompletion(
-  supabase: SupabaseClient,
-  userId: string,
-  input: ActivityCompletionInput
-): Promise<void> {
-  await upsertUserProgress(supabase, userId, input)
-  if (input.xpAmount > 0) {
-    await recordXpEvent(supabase, userId, {
-      source: input.source,
-      sourceId: input.entityId,
-      amount: input.xpAmount,
-      reason: input.reason,
-    })
-  }
-}
-
-/** Sync new activity-log XP rows to Supabase (deduped by activity id). */
+/**
+ * Finds activity-log entries not yet synced, upserts their `user_progress`
+ * row client-side (safe — owner-scoped, no entitlement implications), and
+ * returns the underlying *facts* (event type, entity id, score) for the
+ * server to independently judge and reward.
+ *
+ * Deliberately does **not** compute or send an XP amount: the client only
+ * reports that an event occurred. `/api/progress/record-activity`
+ * (service-role) decides whether it's valid, whether it's already been
+ * rewarded, and how much it's worth — see docs/database-v1.md
+ * ("gamification trust boundary").
+ */
 export async function syncNewActivityLogEvents(
   supabase: SupabaseClient,
   userId: string,
   activities: ActivityLogItem[],
   syncedIds: Set<string>
-): Promise<string[]> {
-  const fresh = activities.filter(
-    (a) => !syncedIds.has(a.id) && a.xpAwarded > 0
-  )
-  if (fresh.length === 0) return []
+): Promise<{ syncedActivityIds: string[]; facts: ActivityFact[] }> {
+  const fresh = activities.filter((a) => !syncedIds.has(a.id))
+  if (fresh.length === 0) return { syncedActivityIds: [], facts: [] }
 
+  const facts: ActivityFact[] = []
   for (const activity of fresh) {
-    await recordActivityCompletion(supabase, userId, {
+    await upsertUserProgress(supabase, userId, {
       entityType: activity.type,
       entityId: activity.entityId,
       status: "completed",
-      xpAmount: activity.xpAwarded,
-      source: activity.source,
-      reason: activity.title,
+    })
+    facts.push({
+      eventType: activity.type,
+      entityId: activity.entityId,
+      score: activity.score,
+      completedAt: activity.completedAt,
     })
     syncedIds.add(activity.id)
   }
 
-  return fresh.map((a) => a.id)
+  return { syncedActivityIds: fresh.map((a) => a.id), facts }
 }

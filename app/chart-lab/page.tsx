@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { getInteractiveScenarios } from "@/content/chart-scenarios"
 
 export const metadata: Metadata = {
-  title: "Chart Lab — TradeTrainer AI",
+  title: "Chart Lab — TradeTrainer Academy",
   description:
     "Practice reading charts by marking structure, levels, and trades on generated scenarios.",
 }

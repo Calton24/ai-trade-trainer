@@ -80,7 +80,7 @@ export function OnboardingShellHeader() {
             <TrendingUpIcon className="size-4 text-primary" />
           </div>
           <span className="text-sm font-semibold tracking-tight">
-            TradeTrainer <span className="text-primary">AI</span>
+            TradeTrainer <span className="text-primary">Academy</span>
           </span>
         </Link>
         <OnboardingHeaderMenu />

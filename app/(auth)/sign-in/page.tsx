@@ -5,7 +5,7 @@ import { SignInForm } from "@/components/auth/sign-in-form"
 
 export const metadata: Metadata = {
   title: "Sign In",
-  description: "Sign in to TradeTrainer AI to save your learning progress.",
+  description: "Sign in to TradeTrainer Academy to save your learning progress.",
 }
 
 export default function SignInPage() {

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 
 import { drillMarkMap, getDrillByType } from "@/lib/mock-data"
 import type { AIReview, DrillType, TradeMark } from "@/lib/types"
+import { isSupabaseConfigured } from "@/lib/supabase/config"
+import { createClient as createServerSupabaseClient } from "@/lib/supabase/server"
 
 interface ReviewRequest {
   marks: TradeMark[]
@@ -93,6 +95,24 @@ function generateMockReview(
 }
 
 export async function POST(request: Request) {
+  // Backs the free /training drill flow, so only authentication is required
+  // here (not an active Pro subscription) — matches that route's access
+  // tier. When Supabase isn't configured the app is running in local/demo
+  // mode with no real accounts at all, so there's nothing to authenticate
+  // against — allow it through unchanged in that case.
+  if (isSupabaseConfigured()) {
+    const supabase = await createServerSupabaseClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 }
+      )
+    }
+  }
+
   const body = (await request.json()) as ReviewRequest
 
   await new Promise((resolve) => setTimeout(resolve, 1200))

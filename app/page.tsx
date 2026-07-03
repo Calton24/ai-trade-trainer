@@ -17,7 +17,7 @@ import { Footer } from "@/components/layout/footer"
 import { Header } from "@/components/layout/header"
 
 export const metadata: Metadata = {
-  title: "TradeTrainer AI — Become a Competent Trader",
+  title: "TradeTrainer Academy — Become a Competent Trader",
   description:
     "A structured, university-style trading programme: lessons, a book library, chart labs, a market simulator, competency scoring, and live-trading readiness.",
 }

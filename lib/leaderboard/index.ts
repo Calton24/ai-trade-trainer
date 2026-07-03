@@ -81,24 +81,36 @@ export interface LeaderboardResult {
   entries: LeaderboardEntry[]
   currentUserRank: number
   currentUserEntry: LeaderboardEntry | null
+  /** True when demo personas fill the board (unauthenticated preview only). */
+  isDemoBoard: boolean
+}
+
+export interface GetLeaderboardOptions {
+  /** Demo personas for marketing / offline preview. Off for authenticated users. */
+  includeSeeded?: boolean
 }
 
 /**
- * Build a ranked leaderboard for the given period from seeded competitors plus
- * the current user, sorted by the period-relevant XP metric.
+ * Build a ranked leaderboard for the given period.
+ * Authenticated production boards should set includeSeeded: false.
  */
 export function getLeaderboard(
   state: UserState,
   period: LeaderboardPeriod,
-  displayName = "You"
+  displayName = "You",
+  options: GetLeaderboardOptions = {}
 ): LeaderboardResult {
-  const seeded = getSeededEntries(period, periodKeyFor(period))
+  const includeSeeded = options.includeSeeded ?? false
   const user = buildUserEntry(state, period, displayName)
 
   const metric = (e: LeaderboardEntry) =>
     period === "all-time" ? e.xp : e.periodXp
 
-  const combined = [...seeded, user].sort((a, b) => metric(b) - metric(a))
+  const combined = includeSeeded
+    ? [...getSeededEntries(period, periodKeyFor(period)), user]
+    : [user]
+
+  combined.sort((a, b) => metric(b) - metric(a))
   combined.forEach((e, i) => {
     e.rank = i + 1
   })
@@ -110,5 +122,6 @@ export function getLeaderboard(
     entries: combined,
     currentUserRank: currentUserEntry?.rank ?? combined.length,
     currentUserEntry,
+    isDemoBoard: includeSeeded,
   }
 }

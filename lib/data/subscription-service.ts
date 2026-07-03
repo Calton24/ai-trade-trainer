@@ -45,39 +45,28 @@ export async function fetchUserSubscription(
     .from("user_subscriptions")
     .select("*")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
     .maybeSingle()
 
-  if (error || !data) return null
+  if (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[subscription] fetch failed", {
+        userId,
+        message: error.message,
+        code: error.code,
+      })
+    }
+    return null
+  }
+
+  if (!data) return null
   return mapRow(data as SubscriptionRow)
 }
 
-/** Dev/test helper — activate a plan without Stripe. */
-export async function setTestSubscription(
-  supabase: SupabaseClient,
-  userId: string,
-  plan: SubscriptionPlan
-): Promise<{ error?: string }> {
-  const now = new Date()
-  const periodEnd = new Date(now)
-  if (plan === "weekly") periodEnd.setDate(periodEnd.getDate() + 7)
-  else if (plan === "six_month") periodEnd.setMonth(periodEnd.getMonth() + 6)
-  else if (plan === "annual") periodEnd.setFullYear(periodEnd.getFullYear() + 1)
-
-  const { error } = await supabase.from("user_subscriptions").upsert(
-    {
-      user_id: userId,
-      plan,
-      status: plan === "free" ? "inactive" : "active",
-      current_period_start: plan === "free" ? null : now.toISOString(),
-      current_period_end: plan === "free" ? null : periodEnd.toISOString(),
-      provider: "test",
-      updated_at: now.toISOString(),
-    },
-    { onConflict: "user_id" }
-  )
-
-  if (error) return { error: error.message }
-  return {}
-}
+// Note: a `setTestSubscription()` dev/test helper used to live here. It let
+// any caller upsert `user_subscriptions` (plan/status/period) using
+// whichever Supabase client was passed in, with no environment guard. It
+// was never wired to a route (dead code), but as of migration 015
+// `authenticated` has no write privilege on `user_subscriptions` at all, so
+// re-adding an equivalent helper would require the service-role admin
+// client and an explicit non-production guard. Deleted rather than fixed
+// in place — see docs/database-v1.md Part 5 / Part 10 (Critical #3).

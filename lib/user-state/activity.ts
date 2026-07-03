@@ -277,6 +277,7 @@ export function recordLearningActivity(
         title: input.title,
         entityId: input.entityId,
         xpAwarded: input.xpAwarded ?? 0,
+        score: input.score,
         completedAt: now.toISOString(),
         dateKey,
         weekKey,
@@ -317,6 +318,16 @@ export function setWeeklyTarget(
   state: UserState,
   daysPerWeek: number
 ): UserState {
+  // No-op guard: returning the *same* state reference when nothing actually
+  // changed matters beyond avoiding wasted work. `UserStateProvider` derives
+  // its whole action-object (including this function's own caller) from a
+  // `useMemo([state, ...])`, so a needless new `state` reference here would
+  // give every caller of `useUserState()` a fresh callback identity on every
+  // call — which can turn a `useEffect` that (correctly) depends on that
+  // callback into an infinite loop of hydrate → persist → new callback →
+  // re-hydrate. See the fix for the settings-page infinite
+  // `/api/progress/record-activity` loop for the concrete case this caused.
+  if (state.weeklyTarget.daysPerWeek === daysPerWeek) return state
   return {
     ...state,
     weeklyTarget: {

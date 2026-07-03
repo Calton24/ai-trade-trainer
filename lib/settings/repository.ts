@@ -3,7 +3,11 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { UserProfile } from "@/lib/auth/types"
 import type { Json } from "@/lib/supabase/database.types"
 import { getDefaultSettings } from "./defaults"
-import type { UserSettingsBundle } from "./types"
+import type {
+  NotificationPreferences,
+  PrivacySettings,
+  UserSettingsBundle,
+} from "./types"
 import {
   clampWeeklyTargetDays,
   normalizeExperienceLevel,
@@ -61,6 +65,131 @@ export async function saveUserSettings(
     {
       user_id: userId,
       settings_json: settings,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  )
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function fetchPrivacySettings(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<PrivacySettings | null> {
+  const { data, error } = await supabase
+    .from("privacy_settings")
+    .select(
+      "leaderboard_visible, show_country, show_streak, show_trader_rank, show_username, friend_leaderboard_visible"
+    )
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error || !data) return null
+
+  return {
+    leaderboardVisible: data.leaderboard_visible,
+    showCountryOnLeaderboard: data.show_country,
+    showStreakPublicly: data.show_streak,
+    showTraderRankPublicly: data.show_trader_rank,
+    showUsernamePublicly: data.show_username,
+    friendLeaderboardVisible: data.friend_leaderboard_visible,
+  }
+}
+
+export async function fetchNotificationPreferences(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<NotificationPreferences | null> {
+  const { data, error } = await supabase
+    .from("notification_preferences")
+    .select(
+      "daily_reminder, weekly_target_reminder, streak_reminder, challenge_reminder, new_content_updates, leaderboard_updates"
+    )
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error || !data) return null
+
+  return {
+    dailyReminder: data.daily_reminder,
+    weeklyTargetReminder: data.weekly_target_reminder,
+    streakReminder: data.streak_reminder,
+    challengeReminder: data.challenge_reminder,
+    newContentUpdates: data.new_content_updates,
+    leaderboardUpdates: data.leaderboard_updates,
+  }
+}
+
+/** Load the full settings bundle for an authenticated user (Supabase only). */
+export async function fetchAuthenticatedSettingsBundle(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<UserSettingsBundle> {
+  const defaults = getDefaultSettings()
+  const [userSettings, profileSettings, privacy, notifications] =
+    await Promise.all([
+      fetchUserSettings(supabase, userId),
+      fetchProfileSettings(supabase, userId),
+      fetchPrivacySettings(supabase, userId),
+      fetchNotificationPreferences(supabase, userId),
+    ])
+
+  const profile = profileSettings?.profile ?? defaults.profile
+  const profilePrivacy = profileSettings?.privacy ?? {}
+
+  return {
+    profile,
+    privacy: {
+      ...defaults.privacy,
+      ...(privacy ?? {}),
+      leaderboardVisible:
+        privacy?.leaderboardVisible ??
+        profilePrivacy.leaderboardVisible ??
+        defaults.privacy.leaderboardVisible,
+    },
+    notifications: notifications ?? defaults.notifications,
+    billingPlan: userSettings?.billingPlan ?? defaults.billingPlan,
+    updatedAt: userSettings?.updatedAt ?? defaults.updatedAt,
+  }
+}
+
+export async function syncPrivacySettings(
+  supabase: SupabaseClient,
+  userId: string,
+  privacy: PrivacySettings
+): Promise<{ error?: string }> {
+  const { error } = await supabase.from("privacy_settings").upsert(
+    {
+      user_id: userId,
+      leaderboard_visible: privacy.leaderboardVisible,
+      show_country: privacy.showCountryOnLeaderboard,
+      show_streak: privacy.showStreakPublicly,
+      show_trader_rank: privacy.showTraderRankPublicly,
+      show_username: privacy.showUsernamePublicly,
+      friend_leaderboard_visible: privacy.friendLeaderboardVisible,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  )
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function syncNotificationPreferences(
+  supabase: SupabaseClient,
+  userId: string,
+  notifications: NotificationPreferences
+): Promise<{ error?: string }> {
+  const { error } = await supabase.from("notification_preferences").upsert(
+    {
+      user_id: userId,
+      daily_reminder: notifications.dailyReminder,
+      weekly_target_reminder: notifications.weeklyTargetReminder,
+      streak_reminder: notifications.streakReminder,
+      challenge_reminder: notifications.challengeReminder,
+      new_content_updates: notifications.newContentUpdates,
+      leaderboard_updates: notifications.leaderboardUpdates,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" }
@@ -148,6 +277,17 @@ export async function syncProfileFromSettings(
     .eq("id", userId)
 
   if (error) return { error: error.message }
+
+  const privacyResult = await syncPrivacySettings(supabase, userId, privacy)
+  if (privacyResult.error) return privacyResult
+
+  const notificationResult = await syncNotificationPreferences(
+    supabase,
+    userId,
+    settings.notifications
+  )
+  if (notificationResult.error) return notificationResult
+
   return {}
 }
 

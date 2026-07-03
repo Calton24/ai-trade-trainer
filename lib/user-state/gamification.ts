@@ -57,7 +57,7 @@ export function finalizeProgression(input: UserState): {
   return { state, events }
 }
 
-/** Award the daily login bonus at most once per calendar day. */
+/** Track last login date only — XP comes from learning activity, not page loads. */
 export function recordDailyLogin(input: UserState): {
   state: UserState
   events: MotivationEvent[]
@@ -68,20 +68,12 @@ export function recordDailyLogin(input: UserState): {
     return { state, events: [] }
   }
 
-  const xp = state.progress.xp + XP_REWARDS.dailyLogin
   return {
     state: {
       ...state,
-      progress: { ...state.progress, xp, level: levelFromXP(xp) },
       gamification: { ...state.gamification, lastLoginDate: today },
     },
-    events: [
-      {
-        type: "xp-awarded",
-        amount: XP_REWARDS.dailyLogin,
-        reason: "Daily login bonus",
-      },
-    ],
+    events: [],
   }
 }
 

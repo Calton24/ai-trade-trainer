@@ -16,7 +16,7 @@ const struggles = [
   {
     title: "Learning with real money",
     description:
-      "Most people only learn after losing. TradeTrainer lets you practice setups safely until the patterns feel familiar.",
+      "Most people only learn after losing. TradeTrainer Academy lets you practice setups safely until the patterns feel familiar.",
   },
 ]
 
@@ -33,7 +33,7 @@ export function Problem() {
             Trading education is broken for beginners
           </h2>
           <p className="mt-4 text-muted-foreground">
-            TradeTrainer AI fixes this with a structured path, interactive
+            TradeTrainer Academy fixes this with a structured path, interactive
             drills, and supportive AI feedback — not signal bots or hype.
           </p>
         </div>

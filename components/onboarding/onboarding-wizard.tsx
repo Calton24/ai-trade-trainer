@@ -14,6 +14,8 @@ import { OnboardingLeaderboardFix } from "@/components/onboarding/onboarding-lea
 import { OnboardingLogoutButton } from "@/components/onboarding/onboarding-logout-button"
 import { useAuth } from "@/components/providers/auth-provider"
 import { CountrySelect } from "@/components/shared/country-select"
+import { trackOnboardingCompleted, trackOnboardingStarted, trackSignUpCompleted } from "@/lib/analytics/events"
+import { SIGNUP_PENDING_STORAGE_KEY } from "@/lib/analytics/signup-flag"
 import {
   checkUsernameAction,
   fetchOnboardingStateAction,
@@ -74,7 +76,7 @@ type LoadPhase = "session" | "profile" | "ready"
 type SaveStatus = "idle" | "draft" | "saved" | "saving" | "error"
 
 export function OnboardingWizard() {
-  const { user, profile, refresh } = useAuth()
+  const { user, profile, refresh, loading: authLoading, profileReady } = useAuth()
   const router = useRouter()
   const userId = user?.id ?? null
 
@@ -95,6 +97,28 @@ export function OnboardingWizard() {
 
   useEffect(() => {
     if (!userId) return
+    trackOnboardingStarted()
+
+    try {
+      if (sessionStorage.getItem(SIGNUP_PENDING_STORAGE_KEY)) {
+        sessionStorage.removeItem(SIGNUP_PENDING_STORAGE_KEY)
+        trackSignUpCompleted()
+      }
+    } catch {
+      // sessionStorage unavailable — non-critical, skip.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
+
+  useEffect(() => {
+    // Wait for auth to finish — never stay on "session" forever.
+    if (authLoading || !profileReady) return
+
+    if (!userId) {
+      setError("You must be signed in to continue onboarding.")
+      setLoadPhase("ready")
+      return
+    }
 
     let cancelled = false
 
@@ -102,51 +126,58 @@ export function OnboardingWizard() {
       setLoadPhase("profile")
       clearStaleOnboardingDrafts(userId!)
 
-      const { state, error: fetchError } = await fetchOnboardingStateAction()
-      if (cancelled) return
+      try {
+        const { state, error: fetchError } = await fetchOnboardingStateAction()
+        if (cancelled) return
 
-      if (fetchError) {
-        setError(fetchError)
+        if (fetchError) {
+          setError(fetchError)
+          setLoadPhase("ready")
+          return
+        }
+
+        const draft = loadOnboardingDraft(userId!)
+        const remoteData: OnboardingData = state
+          ? {
+              displayName: state.displayName,
+              username: state.username,
+              country: state.country,
+              optInLeaderboard: state.optInLeaderboard,
+              experienceLevel: state.experienceLevel,
+              tradingGoals: state.tradingGoals,
+              preferredMarket: state.preferredMarket,
+              studyIntensity: state.studyIntensity,
+              learningPlan: state.learningPlan,
+              weeklyTargetDays: state.weeklyTargetDays,
+            }
+          : {
+              ...DEFAULT_ONBOARDING_DATA,
+              displayName:
+                profile?.name ||
+                (typeof user?.user_metadata?.name === "string"
+                  ? user.user_metadata.name
+                  : "") ||
+                user?.email?.split("@")[0]?.replace(/[._+]/g, " ") ||
+                "",
+            }
+        const remoteStep = state?.step ?? 1
+        const merged = mergeOnboardingSources(
+          remoteData,
+          remoteStep,
+          state?.updatedAt ?? null,
+          draft
+        )
+
+        setData(merged.data)
+        setStep(merged.step)
+        hydratedRef.current = true
         setLoadPhase("ready")
-        return
+      } catch (err) {
+        if (cancelled) return
+        console.error("[onboarding] hydrate failed", err)
+        setError("Could not load your onboarding progress. Please refresh.")
+        setLoadPhase("ready")
       }
-
-      const draft = loadOnboardingDraft(userId!)
-      const remoteData: OnboardingData = state
-        ? {
-            displayName: state.displayName,
-            username: state.username,
-            country: state.country,
-            optInLeaderboard: state.optInLeaderboard,
-            experienceLevel: state.experienceLevel,
-            tradingGoals: state.tradingGoals,
-            preferredMarket: state.preferredMarket,
-            studyIntensity: state.studyIntensity,
-            learningPlan: state.learningPlan,
-            weeklyTargetDays: state.weeklyTargetDays,
-          }
-        : {
-            ...DEFAULT_ONBOARDING_DATA,
-            displayName:
-              profile?.name ||
-              (typeof user?.user_metadata?.name === "string"
-                ? user.user_metadata.name
-                : "") ||
-              user?.email?.split("@")[0]?.replace(/[._+]/g, " ") ||
-              "",
-          }
-      const remoteStep = state?.step ?? 1
-      const merged = mergeOnboardingSources(
-        remoteData,
-        remoteStep,
-        state?.updatedAt ?? null,
-        draft
-      )
-
-      setData(merged.data)
-      setStep(merged.step)
-      hydratedRef.current = true
-      setLoadPhase("ready")
     }
 
     void hydrate()
@@ -154,7 +185,7 @@ export function OnboardingWizard() {
     return () => {
       cancelled = true
     }
-  }, [userId, user, profile?.name])
+  }, [userId, user, profile?.name, authLoading, profileReady])
 
   useEffect(() => {
     if (!userId || !hydratedRef.current || loadPhase !== "ready") return
@@ -269,6 +300,7 @@ export function OnboardingWizard() {
 
     if (userId) clearOnboardingDraft(userId)
     setSaveStatus("saved")
+    trackOnboardingCompleted()
     await refresh()
     setSaving(false)
     router.replace("/dashboard?welcome=1")

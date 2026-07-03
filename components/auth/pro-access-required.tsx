@@ -2,17 +2,22 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LockIcon } from "lucide-react"
 
 import { UpgradeModal } from "@/components/auth/upgrade-modal"
 import { Button } from "@/components/ui/button"
 import { useSubscription } from "@/components/providers/subscription-provider"
+import { trackProGateHit } from "@/lib/analytics/events"
 import { requiresProSubscription } from "@/lib/subscription/access"
 
 export function ProAccessRequired({ pathname }: { pathname: string }) {
   const router = useRouter()
   const { loading, hasPro } = useSubscription()
+
+  useEffect(() => {
+    if (!loading && !hasPro) trackProGateHit({ pathname })
+  }, [loading, hasPro, pathname])
 
   if (loading) {
     return (

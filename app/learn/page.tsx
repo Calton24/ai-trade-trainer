@@ -4,7 +4,7 @@ import { LearnContent } from "@/components/learn/learn-content"
 import { getAllLessons } from "@/content/registry"
 
 export const metadata: Metadata = {
-  title: "Learn — TradeTrainer AI",
+  title: "Learn — TradeTrainer Academy",
 }
 
 export default function LearnPage() {

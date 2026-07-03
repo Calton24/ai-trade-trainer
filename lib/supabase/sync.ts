@@ -65,6 +65,20 @@ export async function saveLearningState(
   return {}
 }
 
+/**
+ * Writes every gamification/entitlement-derived field computed from a
+ * user's learning state: the score columns on `profiles` (xp, level,
+ * streak, rank_tier, competency_score, xp_today/week/month, ...),
+ * `streaks`, `weekly_targets`, `user_badges`, `user_stats` (via
+ * `syncUserStats`), and the competence/lesson-progress mirrors.
+ *
+ * As of migration 015, `authenticated` no longer has UPDATE privilege on
+ * the gamification columns of `profiles` (only identity/preference columns
+ * remain client-writable) or on `user_stats` at all. **Only call this with
+ * the service-role admin client**, scoped to a server-verified `userId` —
+ * see `app/api/progress/sync-gamification/route.ts`, the sole caller.
+ * Never call this with a browser-supplied Supabase client.
+ */
 export async function syncProfileSummary(
   supabase: SupabaseClient,
   userId: string,
@@ -184,10 +198,26 @@ export async function archiveProgressReset(
   await archiveProgressSlice(supabase, userId, archive)
 }
 
-export function mergeLearningStates(
+/**
+ * Merge anonymous localStorage preview progress with a remote snapshot.
+ *
+ * **Anonymous / dev preview only** — never call for authenticated users.
+ * Authenticated sessions must use Supabase `user_learning_state` as the sole source of truth.
+ */
+export function mergeAnonymousPreviewState(
   local: UserState,
-  remote: UserState | null
+  remote: UserState | null,
+  options?: { authenticatedUserId?: string | null }
 ): UserState {
+  if (options?.authenticatedUserId) {
+    const message =
+      "mergeAnonymousPreviewState must not run for authenticated users"
+    if (process.env.NODE_ENV === "development") {
+      throw new Error(message)
+    }
+    return remote ?? local
+  }
+
   if (!remote) return local
 
   const localHasActivity = local.activityLog.length > 0
@@ -229,6 +259,9 @@ export function mergeLearningStates(
     },
   }
 }
+
+/** @deprecated Use mergeAnonymousPreviewState — anonymous preview only. */
+export const mergeLearningStates = mergeAnonymousPreviewState
 
 export async function fetchUserProfile(
   supabase: SupabaseClient,
@@ -290,7 +323,7 @@ export async function fetchEnrollments(
   return data?.map((r) => r.feature_id) ?? []
 }
 
-/** Migrate anonymous localStorage progress to cloud on first sign-in. */
+/** Anonymous localStorage progress — not used for authenticated users. */
 export function getAnonymousLocalState(): UserState {
   return loadUserState()
 }

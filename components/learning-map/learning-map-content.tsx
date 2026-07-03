@@ -302,7 +302,7 @@ export function LearningMapContent() {
         )}
 
         <p className="text-center text-xs text-muted-foreground">
-          TradeTrainer AI is an educational simulator. It does not provide financial advice,
+          TradeTrainer Academy is an educational simulator. It does not provide financial advice,
           trading signals, live trade recommendations, or profit guarantees.
         </p>
       </div>

@@ -93,18 +93,27 @@ export function LeaderboardContent() {
             <span className="w-16 text-right">Streak</span>
             <span className="w-24 text-right">XP</span>
           </div>
-          {rest.map((entry) => (
-            <LeaderboardRow
-              key={entry.id}
-              entry={entry}
-              isPeriodXp={isPeriodXp}
-            />
-          ))}
+          {rest.length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+              {board.isDemoBoard
+                ? "Demo leaderboard preview."
+                : "No other public leaderboard entries yet. Opt in under Settings → Privacy to appear here."}
+            </p>
+          ) : (
+            rest.map((entry) => (
+              <LeaderboardRow
+                key={entry.id}
+                entry={entry}
+                isPeriodXp={isPeriodXp}
+              />
+            ))
+          )}
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          Competitors shown are seeded learners until public multiplayer is
-          enabled. Your placement reflects your real XP.
+          {board.isDemoBoard
+            ? "Preview board with sample traders — sign in to track your real XP."
+            : "Only traders who opted into public leaderboards appear here. Your email is never shown."}
         </p>
       </div>
     </AppShell>

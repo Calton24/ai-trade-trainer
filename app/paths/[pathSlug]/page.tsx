@@ -19,7 +19,7 @@ export async function generateMetadata({
   const path = getPathBySlug(pathSlug)
   if (!path) return { title: "Path Not Found" }
   return {
-    title: `${path.title} — TradeTrainer AI`,
+    title: `${path.title} — TradeTrainer Academy`,
     description: path.description,
   }
 }

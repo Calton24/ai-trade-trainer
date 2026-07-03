@@ -1,4 +1,4 @@
-# TradeTrainer AI
+# TradeTrainer Academy
 
 The Codecademy-style platform for learning trading step by step.
 
@@ -51,4 +51,4 @@ See `.env.example` for required keys. Schema in `supabase/migrations/001_initial
 
 ## Disclaimer
 
-TradeTrainer AI is an educational simulator. It does not provide financial advice, trading signals, or profit guarantees.
+TradeTrainer Academy is an educational simulator. It does not provide financial advice, trading signals, or profit guarantees.

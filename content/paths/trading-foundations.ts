@@ -111,7 +111,7 @@ export const tradingFoundationsPath: LearningPathContent = {
               id: "safety",
               type: "safety-note",
               content:
-                "This is for education only. Do not place real trades based on this lesson. TradeTrainer AI is a simulator.",
+                "This is for education only. Do not place real trades based on this lesson. TradeTrainer Academy is a simulator.",
             },
             {
               id: "check1",

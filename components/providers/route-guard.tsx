@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2Icon } from "lucide-react"
@@ -10,6 +11,7 @@ import { useSubscription } from "@/components/providers/subscription-provider"
 import { isPublicPath, signInWithReturn } from "@/lib/auth/route-access"
 import { requiresProSubscription } from "@/lib/subscription/access"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
+import { Button } from "@/components/ui/button"
 
 export function isOnboardingPath(pathname: string): boolean {
   return pathname === "/onboarding" || pathname.startsWith("/onboarding/")
@@ -21,7 +23,8 @@ export function isOnboardingPath(pathname: string): boolean {
  * preserved return URL. Pro routes require an active subscription.
  */
 export function RouteGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading, profile, user } = useAuth()
+  const { isAuthenticated, loading, profileReady, profile, user, isConfigured } =
+    useAuth()
   const { hasPro, loading: subLoading } = useSubscription()
   const pathname = usePathname()
   const router = useRouter()
@@ -29,11 +32,13 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   const onOnboarding = isOnboardingPath(pathname)
   const needsPro = requiresProSubscription(pathname)
 
+  // Wait for the first profile attempt only — never block forever when the
+  // profile row is missing (new signup) or the fetch failed.
   const profileLoading =
     isSupabaseConfigured() &&
     isAuthenticated &&
-    user &&
-    profile === null &&
+    Boolean(user) &&
+    !profileReady &&
     !loading
 
   useEffect(() => {
@@ -58,8 +63,8 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     if (
       isSupabaseConfigured() &&
       user &&
-      profile &&
-      profile.onboardingCompleted === false &&
+      profileReady &&
+      profile?.onboardingCompleted === false &&
       !pathname.startsWith("/settings")
     ) {
       router.replace("/onboarding")
@@ -67,6 +72,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   }, [
     loading,
     profileLoading,
+    profileReady,
     allowed,
     isAuthenticated,
     pathname,
@@ -77,7 +83,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   ])
 
   if (onOnboarding) {
-    if (loading || profileLoading || !isAuthenticated) {
+    if (loading || profileLoading) {
       return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-2">
           <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
@@ -87,6 +93,22 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
         </div>
       )
     }
+
+    if (!isAuthenticated) {
+      return (
+        <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            {isConfigured
+              ? "Sign in to continue setting up your account."
+              : "Authentication is not configured. Check Vercel environment variables."}
+          </p>
+          <Button render={<Link href={signInWithReturn("/onboarding")} />}>
+            Sign in
+          </Button>
+        </div>
+      )
+    }
+
     if (profile?.onboardingCompleted) {
       return (
         <div className="flex min-h-svh items-center justify-center">

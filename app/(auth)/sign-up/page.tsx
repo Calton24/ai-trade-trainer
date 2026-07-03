@@ -5,7 +5,7 @@ import { SignUpForm } from "@/components/auth/sign-up-form"
 
 export const metadata: Metadata = {
   title: "Sign Up",
-  description: "Create your TradeTrainer AI account and start your trading education journey.",
+  description: "Create your TradeTrainer Academy account and start your trading education journey.",
 }
 
 export default function SignUpPage() {

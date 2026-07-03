@@ -1,18 +1,14 @@
 import type { Metadata } from "next"
-import { redirect } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
-import { AppShell } from "@/components/layout/app-shell"
-import { LessonContent } from "@/components/learn/lesson-content"
 import { getAllLessons, getPathBySlug } from "@/content/registry"
-import { getLessonById as getLegacyLesson } from "@/lib/mock/lessons"
 
 interface LessonPageProps {
   params: Promise<{ lessonId: string }>
 }
 
 export async function generateStaticParams() {
-  const course = getAllLessons().map((l) => ({ lessonId: l.slug }))
-  return course
+  return getAllLessons().map((l) => ({ lessonId: l.slug }))
 }
 
 export async function generateMetadata({
@@ -22,10 +18,8 @@ export async function generateMetadata({
   const courseLesson =
     getAllLessons().find((l) => l.id === lessonId || l.slug === lessonId) ??
     null
-  const legacy = getLegacyLesson(lessonId)
-  const title = courseLesson?.title ?? legacy?.title
-  if (!title) return { title: "Lesson Not Found" }
-  return { title: `${title} — TradeTrainer AI` }
+  if (!courseLesson) return { title: "Lesson Not Found" }
+  return { title: `${courseLesson.title} — TradeTrainer Academy` }
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
@@ -34,20 +28,9 @@ export default async function LessonPage({ params }: LessonPageProps) {
     (l) => l.id === lessonId || l.slug === lessonId
   )
 
-  if (courseLesson) {
-    redirect(
-      `/paths/${getPathBySlug(courseLesson.pathId)?.slug ?? courseLesson.pathId}/lessons/${courseLesson.slug}`
-    )
-  }
+  if (!courseLesson) notFound()
 
-  const legacy = getLegacyLesson(lessonId)
-  if (!legacy) redirect("/learn")
-
-  return (
-    <AppShell>
-      <div className="mx-auto max-w-3xl">
-        <LessonContent lesson={legacy} />
-      </div>
-    </AppShell>
+  redirect(
+    `/paths/${getPathBySlug(courseLesson.pathId)?.slug ?? courseLesson.pathId}/lessons/${courseLesson.slug}`
   )
 }

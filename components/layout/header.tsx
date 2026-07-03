@@ -4,6 +4,7 @@ import Link from "next/link"
 import { TrendingUpIcon } from "lucide-react"
 
 import { AuthHeaderActions } from "@/components/layout/auth-header-actions"
+import { isPrivateBetaEnabled } from "@/lib/config/private-beta"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
@@ -19,6 +20,10 @@ const marketingLinks = [
 ]
 
 export function Header({ variant = "marketing" }: HeaderProps) {
+  const links = isPrivateBetaEnabled()
+    ? marketingLinks.filter((link) => link.href !== "/pricing")
+    : marketingLinks
+
   return (
     <header
       className={cn(
@@ -32,12 +37,12 @@ export function Header({ variant = "marketing" }: HeaderProps) {
             <TrendingUpIcon className="text-primary" />
           </div>
           <span className="font-semibold tracking-tight">
-            TradeTrainer <span className="text-primary">AI</span>
+            TradeTrainer <span className="text-primary">Academy</span>
           </span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {marketingLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}

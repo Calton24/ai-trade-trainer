@@ -3,15 +3,8 @@ import { getRankByTier, getTierForXp } from "@/lib/progression/ranks"
 import type { LeaderboardEntry, LeaderboardPeriod } from "./types"
 
 /**
- * Seeded competitor pool.
- *
- * These are placeholder learners so the leaderboards feel alive before the
- * multiplayer backend is populated. Each persona has a stable lifetime XP and
- * activity profile; period XP is derived deterministically per period key so
- * standings shift day-to-day without ever being random across reloads.
- *
- * When real users + per-period XP land in Supabase, swap these out via
- * `lib/leaderboard/repository.ts` — the entry shape is identical.
+ * Seeded competitor pool for unauthenticated / offline leaderboard preview only.
+ * Never mix with authenticated Supabase leaderboard_public results.
  */
 
 interface SeedPersona {

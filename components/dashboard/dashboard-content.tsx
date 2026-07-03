@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { useAuth } from "@/components/providers/auth-provider"
+import { useSubscription } from "@/components/providers/subscription-provider"
 import { WeeklyTargetWidget } from "@/components/habits/weekly-target-widget"
 import { AppShell } from "@/components/layout/app-shell"
 import { useUserState } from "@/components/providers/user-state-provider"
@@ -26,10 +27,12 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { badgeDefinitions } from "@/lib/mock/badges"
 import { getLessonById, getPathBySlug } from "@/content/registry"
+import { getFreeLessonHref } from "@/lib/subscription/access"
 import { cn } from "@/lib/utils"
 
 export function DashboardContent() {
   const { profile } = useAuth()
+  const { hasPro, loading: subLoading } = useSubscription()
   const {
     stats,
     state,
@@ -106,6 +109,28 @@ export function DashboardContent() {
               </Button>
               <Button variant="outline" render={<Link href="/learning-map" />}>
                 Open learning map
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!subLoading && !hasPro && (
+          <div className="flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-primary">Free plan</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try your first lesson free, then upgrade for full access to
+                every path, quiz, Chart Lab, Trend Spotter, Strategy Wiki,
+                Simulator, and Trader Readiness.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Button variant="outline" render={<Link href={getFreeLessonHref()} />}>
+                Try free lesson
+              </Button>
+              <Button render={<Link href="/pricing" />}>
+                View plans
+                <ArrowRightIcon data-icon="inline-end" />
               </Button>
             </div>
           </div>

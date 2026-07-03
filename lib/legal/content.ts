@@ -5,7 +5,7 @@ export interface LegalSection {
 }
 
 export const EDUCATIONAL_DISCLAIMER = [
-  "TradeTrainer AI is an educational platform only.",
+  "TradeTrainer Academy is an educational platform only.",
   "It does not provide financial advice, investment recommendations, or trading signals.",
   "It does not guarantee profits or trading outcomes of any kind.",
   "Simulated results do not represent actual trading performance.",
@@ -18,7 +18,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalSection[]> = {
       id: "acceptance",
       title: "Acceptance of Terms",
       body: [
-        "By creating an account or using TradeTrainer AI, you agree to these Terms of Use.",
+        "By creating an account or using TradeTrainer Academy, you agree to these Terms of Use.",
         "If you do not agree, do not use the platform.",
       ],
     },
@@ -80,7 +80,7 @@ export const LEGAL_DOCUMENTS: Record<string, LegalSection[]> = {
       body: [
         "Trading financial markets involves substantial risk of loss.",
         "Most retail traders lose money. Past performance — simulated or real — does not guarantee future results.",
-        "TradeTrainer AI does not execute live trades and is not a broker or financial adviser.",
+        "TradeTrainer Academy does not execute live trades and is not a broker or financial adviser.",
         ...EDUCATIONAL_DISCLAIMER,
       ],
     },

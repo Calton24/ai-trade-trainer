@@ -32,7 +32,7 @@ export async function generateMetadata({
   const lesson = getLessonBySlug(pathSlug, lessonSlug)
   if (!lesson) return { title: "Lesson Not Found" }
   return {
-    title: `${lesson.title} — TradeTrainer AI`,
+    title: `${lesson.title} — TradeTrainer Academy`,
     description: lesson.description,
   }
 }

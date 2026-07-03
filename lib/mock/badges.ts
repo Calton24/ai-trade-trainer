@@ -1,6 +1,6 @@
 import type { Badge } from "@/lib/types"
 
-/** Badge definitions only — earned state comes from user localStorage */
+/** Badge definitions only — earned state comes from user progress (Supabase / activity). */
 export const badgeDefinitions: Omit<Badge, "earned" | "earnedAt">[] = [
   {
     id: "first-learning-day",

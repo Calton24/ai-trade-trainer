@@ -21,6 +21,7 @@ import {
 } from "@/lib/auth/local-session"
 import { createClientIfConfigured } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
+import { clearSettingsStorage } from "@/lib/settings/storage"
 import {
   fetchEnrollments,
   fetchLearningState,
@@ -32,6 +33,8 @@ interface AuthContextValue {
   profile: UserProfile | null
   enrollments: string[]
   loading: boolean
+  /** True once the initial session + profile attempt has finished (success or fail). */
+  profileReady: boolean
   isConfigured: boolean
   /** True when authenticated via Supabase OR the local-account fallback. */
   isAuthenticated: boolean
@@ -45,6 +48,26 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+const AUTH_TIMEOUT_MS = 12_000
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`))
+    }, ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      }
+    )
+  })
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const configured = isSupabaseConfigured()
   const [user, setUser] = useState<User | null>(null)
@@ -54,69 +77,108 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Start in a loading state until we resolve the session (Supabase or local),
   // so the route guard never bounces an authenticated user on first paint.
   const [loading, setLoading] = useState(true)
+  const [profileReady, setProfileReady] = useState(false)
 
   const loadProfile = useCallback(async (uid: string) => {
     const supabase = createClientIfConfigured()
-    if (!supabase) return
+    if (!supabase) {
+      setProfile(null)
+      setEnrollments([])
+      setProfileReady(true)
+      return
+    }
 
-    const [prof, enrolled] = await Promise.all([
-      fetchUserProfile(supabase, uid),
-      fetchEnrollments(supabase, uid),
-    ])
-    setProfile(prof)
-    setEnrollments(enrolled)
+    try {
+      const [prof, enrolled] = await withTimeout(
+        Promise.all([
+          fetchUserProfile(supabase, uid),
+          fetchEnrollments(supabase, uid),
+        ]),
+        AUTH_TIMEOUT_MS,
+        "profile load"
+      )
+      setProfile(prof)
+      setEnrollments(enrolled)
+    } catch (error) {
+      console.error("[auth] profile load failed", error)
+      setProfile(null)
+      setEnrollments([])
+    } finally {
+      setProfileReady(true)
+    }
   }, [])
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured()) {
       const session = getLocalSession()
       setLocalProfile(session ? localAccountToProfile(session) : null)
+      setProfileReady(true)
       setLoading(false)
       return
     }
 
     const supabase = createClientIfConfigured()
     if (!supabase) {
+      setProfileReady(true)
       setLoading(false)
       return
     }
 
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser()
-    setUser(currentUser)
-    if (currentUser) {
-      await loadProfile(currentUser.id)
-    } else {
+    try {
+      const {
+        data: { user: currentUser },
+      } = await withTimeout(supabase.auth.getUser(), AUTH_TIMEOUT_MS, "auth.getUser")
+      setUser(currentUser)
+      if (currentUser) {
+        await loadProfile(currentUser.id)
+      } else {
+        setProfile(null)
+        setEnrollments([])
+        setProfileReady(true)
+      }
+    } catch (error) {
+      console.error("[auth] session refresh failed", error)
+      setUser(null)
       setProfile(null)
       setEnrollments([])
+      setProfileReady(true)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [loadProfile])
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
       const session = getLocalSession()
       setLocalProfile(session ? localAccountToProfile(session) : null)
+      setProfileReady(true)
       setLoading(false)
       return
     }
 
     const supabase = createClientIfConfigured()
-    if (!supabase) return
+    if (!supabase) {
+      setProfileReady(true)
+      setLoading(false)
+      return
+    }
 
-    refresh()
+    void refresh()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        loadProfile(session.user.id)
+        clearSettingsStorage()
+        void loadProfile(session.user.id)
       } else {
+        clearSettingsStorage()
         setProfile(null)
         setEnrollments([])
+        setProfileReady(true)
       }
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -126,20 +188,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = createClientIfConfigured()
     if (supabase) await supabase.auth.signOut()
     clearLocalSession()
+    clearSettingsStorage()
     setUser(null)
     setProfile(null)
     setLocalProfile(null)
     setEnrollments([])
+    setProfileReady(true)
+    setLoading(false)
   }, [])
 
   const signUpLocally = useCallback((input: LocalSignUpInput) => {
     const account = signUpLocal(input)
     setLocalProfile(localAccountToProfile(account))
+    setProfileReady(true)
+    setLoading(false)
   }, [])
 
   const signInLocally = useCallback((email: string) => {
     const account = signInLocal(email)
     setLocalProfile(localAccountToProfile(account))
+    setProfileReady(true)
+    setLoading(false)
   }, [])
 
   const value = useMemo(
@@ -148,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile: configured ? profile : localProfile,
       enrollments,
       loading,
+      profileReady,
       isConfigured: configured,
       isAuthenticated: configured ? Boolean(user) : Boolean(localProfile),
       authMode: configured ? ("supabase" as const) : ("local" as const),
@@ -162,6 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localProfile,
       enrollments,
       loading,
+      profileReady,
       configured,
       refresh,
       signOutClient,

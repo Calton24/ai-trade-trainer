@@ -32,7 +32,7 @@ export function AppHeader({ variant = "marketing" }: AppHeaderProps) {
             <TrendingUpIcon className="text-primary" />
           </div>
           <span className="font-semibold tracking-tight">
-            TradeTrainer <span className="text-primary">AI</span>
+            TradeTrainer <span className="text-primary">Academy</span>
           </span>
         </Link>
 

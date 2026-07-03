@@ -10,7 +10,7 @@ import type {
 } from "@/lib/flashcards/types"
 
 export const FLASHCARDS_DISCLAIMER =
-  "TradeTrainer AI is an educational simulator. Flashcards are for memory and practice only — not financial advice, signals, or profit guarantees."
+  "TradeTrainer Academy is an educational simulator. Flashcards are for memory and practice only — not financial advice, signals, or profit guarantees."
 
 const ALL_CARDS = ALL_FLASHCARD_ARRAYS.flat()
 const CARD_MAP = new Map(ALL_CARDS.map((c) => [c.id, c]))

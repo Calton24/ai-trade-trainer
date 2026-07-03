@@ -146,7 +146,15 @@ export interface ActivityLogItem {
   source: ActivitySource
   title: string
   entityId: string
+  /**
+   * Client-computed, display-only estimate. Never trusted server-side —
+   * the server derives the real XP award from its own catalog
+   * (`lib/gamification/xp-catalog.ts`) keyed off `type`/`entityId`/`score`.
+   * See `lib/gamification/record-activity.ts`.
+   */
   xpAwarded: number
+  /** Raw score (0-100) for scoreable activities (e.g. quizzes), if any. */
+  score?: number
   completedAt: string
   dateKey: string
   weekKey: string
@@ -169,6 +177,7 @@ export interface LearningActivityInput {
   title: string
   entityId: string
   xpAwarded?: number
+  score?: number
 }
 
 export type MotivationEvent =

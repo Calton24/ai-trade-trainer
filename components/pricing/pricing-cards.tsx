@@ -1,7 +1,6 @@
-import Link from "next/link"
 import { CheckIcon } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { PricingCheckoutButton } from "@/components/pricing/pricing-checkout-button"
 import {
   Card,
   CardContent,
@@ -83,18 +82,10 @@ export function PricingCards({ compact = false }: PricingCardsProps) {
               </ul>
             </CardContent>
             <CardFooter>
-              {/* Wire to /api/checkout with Stripe when STRIPE_SECRET_KEY is set */}
-              <Button
-                className="w-full"
+              <PricingCheckoutButton
+                tier={tier}
                 variant={badge ? "default" : "outline"}
-                render={
-                  <Link
-                    href={`/sign-up?plan=${encodeURIComponent(tier.id)}`}
-                  />
-                }
-              >
-                {tier.cta}
-              </Button>
+              />
             </CardFooter>
           </Card>
         )

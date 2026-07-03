@@ -82,6 +82,7 @@ export function recordBookQuizAttempt(
       title: `${concept?.title ?? "Concept"} quiz`,
       entityId: attempt.conceptId,
       xpAwarded: 0,
+      score: attempt.score,
     })
     next = withActivity
   }

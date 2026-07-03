@@ -5,7 +5,7 @@ import { onboardingGlass } from "@/components/onboarding/onboarding-styles"
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard"
 
 export const metadata: Metadata = {
-  title: "Welcome — TradeTrainer AI",
+  title: "Welcome — TradeTrainer Academy",
   description: "Set up your trader profile and learning plan.",
 }
 
@@ -14,7 +14,7 @@ export default function OnboardingPage() {
     <OnboardingShell>
       <div className={onboardingGlass.heroCard}>
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          Welcome to TradeTrainer AI
+          Welcome to TradeTrainer Academy
         </h1>
         <p className="mt-2 text-muted-foreground">
           Tell us about yourself so we can personalise your learning path.

@@ -10,14 +10,16 @@ import {
 } from "react"
 
 import { useAuth } from "@/components/providers/auth-provider"
-import { fetchUserSubscription } from "@/lib/data/subscription-service"
-import { hasProAccess } from "@/lib/subscription/access"
+import { fetchSubscriptionStatus } from "@/lib/subscription/client"
+import type { ProAccessSource } from "@/lib/subscription/access"
+import type { AdminGrant } from "@/lib/subscription/admin-grant-types"
 import type { UserSubscription } from "@/lib/subscription/types"
-import { createClientIfConfigured } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
 interface SubscriptionContextValue {
   subscription: UserSubscription | null
+  adminGrant: AdminGrant | null
+  proSource: ProAccessSource
   loading: boolean
   hasPro: boolean
   refresh: () => Promise<void>
@@ -46,24 +48,58 @@ export function SubscriptionProvider({
 }) {
   const { user, isAuthenticated, authMode } = useAuth()
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
+  const [adminGrant, setAdminGrant] = useState<AdminGrant | null>(null)
+  const [proSource, setProSource] = useState<ProAccessSource>("none")
+  const [hasPro, setHasPro] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured() || authMode !== "supabase" || !user) {
       setSubscription(isAuthenticated ? DEFAULT_FREE : null)
+      setAdminGrant(null)
+      setProSource("none")
+      setHasPro(false)
       setLoading(false)
       return
     }
 
-    const supabase = createClientIfConfigured()
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
+    try {
+      const status = await fetchSubscriptionStatus()
+      if (!status) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("[subscription] status API unavailable — showing free tier")
+        }
+        setSubscription(DEFAULT_FREE)
+        setAdminGrant(null)
+        setProSource("none")
+        setHasPro(false)
+        return
+      }
 
-    const row = await fetchUserSubscription(supabase, user.id)
-    setSubscription(row ?? DEFAULT_FREE)
-    setLoading(false)
+      if (process.env.NODE_ENV === "development") {
+        console.debug("[subscription] provider refresh", {
+          sessionUserId: user.id,
+          apiUserId: status.userId,
+          plan: status.subscription?.plan ?? "free",
+          status: status.subscription?.status ?? "inactive",
+          hasPro: status.hasPro,
+          proSource: status.proSource,
+        })
+      }
+
+      setSubscription(status.subscription ?? DEFAULT_FREE)
+      setAdminGrant(status.adminGrant)
+      setProSource(status.proSource)
+      setHasPro(status.hasPro)
+    } catch (error) {
+      console.error("[subscription] refresh failed", error)
+      setSubscription(DEFAULT_FREE)
+      setAdminGrant(null)
+      setProSource("none")
+      setHasPro(false)
+    } finally {
+      setLoading(false)
+    }
   }, [user, isAuthenticated, authMode])
 
   useEffect(() => {
@@ -74,11 +110,13 @@ export function SubscriptionProvider({
   const value = useMemo(
     () => ({
       subscription,
+      adminGrant,
+      proSource,
       loading,
-      hasPro: hasProAccess(subscription),
+      hasPro,
       refresh,
     }),
-    [subscription, loading, refresh]
+    [subscription, adminGrant, proSource, loading, hasPro, refresh]
   )
 
   return (

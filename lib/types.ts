@@ -18,19 +18,6 @@ export type DrillType =
 
 export type Difficulty = "beginner" | "intermediate" | "advanced"
 
-export type SyllabusItemType =
-  | "lesson"
-  | "quiz"
-  | "drill"
-  | "reflection"
-  | "exercise"
-
-export type QuizQuestionType =
-  | "multiple_choice"
-  | "true_false"
-  | "scenario"
-  | "best_answer"
-
 export type TradeRecommendation = "take" | "skip"
 
 export interface Candle {
@@ -45,103 +32,6 @@ export interface TradeMark {
   type: TradeMarkType
   price: number
   index: number
-}
-
-export interface LearningPath {
-  id: string
-  title: string
-  description: string
-  difficulty: Difficulty | "beginner-intermediate"
-  estimatedHours: number
-  moduleCount: number
-  quizCount: number
-  drillCount: number
-  progressPercent: number
-  locked: boolean
-  skillsYouGain: string[]
-  whatYouLearn: string[]
-  relatedPathIds: string[]
-}
-
-export interface SyllabusItem {
-  id: string
-  pathId: string
-  order: number
-  title: string
-  type: SyllabusItemType
-  estimatedMinutes: number
-  locked: boolean
-  completed: boolean
-  linkedId?: string
-}
-
-export interface QuizOption {
-  id: string
-  text: string
-  correct: boolean
-}
-
-export interface QuizQuestion {
-  id: string
-  type?: QuizQuestionType
-  question: string
-  options: QuizOption[]
-  explanation: string
-  chartPlaceholder?: boolean
-}
-
-export interface Quiz {
-  id: string
-  pathId: string
-  title: string
-  description: string
-  questions: QuizQuestion[]
-  xpReward: number
-  passingScore: number
-}
-
-export interface QuizResult {
-  quizId: string
-  score: number
-  passed: boolean
-  correctCount: number
-  totalQuestions: number
-  xpEarned: number
-}
-
-export interface Module {
-  id: string
-  order: number
-  title: string
-  description: string
-  difficulty: Difficulty
-  estimatedMinutes: number
-  completionPercent: number
-  locked: boolean
-  lessonIds: string[]
-  category?: string
-}
-
-export interface Lesson {
-  id: string
-  moduleId: string
-  pathId?: string
-  title: string
-  subtitle: string
-  difficulty: Difficulty
-  estimatedMinutes: number
-  xpReward: number
-  category: string
-  isPro?: boolean
-  sections: LessonSection[]
-  keyIdea: string
-  quiz: QuizQuestion[]
-  nextLessonId: string | null
-}
-
-export interface LessonSection {
-  heading: string
-  content: string
 }
 
 export interface Drill {

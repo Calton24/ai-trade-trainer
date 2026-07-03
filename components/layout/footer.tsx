@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-xl text-sm text-muted-foreground">
-            TradeTrainer AI is an educational simulator. It does not provide
+            TradeTrainer Academy is an educational simulator. It does not provide
             financial advice, trading signals, live trade recommendations, or
             profit guarantees.
           </p>
@@ -26,7 +26,7 @@ export function Footer() {
           </div>
         </div>
         <p className="text-xs text-muted-foreground/70">
-          © {new Date().getFullYear()} TradeTrainer AI. All rights reserved.
+          © {new Date().getFullYear()} TradeTrainer Academy. All rights reserved.
         </p>
       </div>
     </footer>

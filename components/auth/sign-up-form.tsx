@@ -2,16 +2,27 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useActionState, useState } from "react"
+import { useActionState, useEffect, useState } from "react"
 
 import { AuthDivider, OAuthButtons } from "@/components/auth/oauth-buttons"
 import { useAuth } from "@/components/providers/auth-provider"
 import { signUp, type AuthActionResult } from "@/lib/auth/actions"
+import { trackSignUpStarted } from "@/lib/analytics/events"
+import { SIGNUP_PENDING_STORAGE_KEY } from "@/lib/analytics/signup-flag"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 const initialState: AuthActionResult = {}
+
+/** Marks that a signup just happened so the onboarding page can fire `sign_up_completed` once it lands, regardless of whether the flow went through the Supabase server action redirect or the local-mode client redirect. */
+function markSignupPending() {
+  try {
+    sessionStorage.setItem(SIGNUP_PENDING_STORAGE_KEY, "1")
+  } catch {
+    // sessionStorage unavailable (private mode, etc.) — non-critical, skip.
+  }
+}
 
 export function SignUpForm() {
   const { isConfigured, signUpLocally } = useAuth()
@@ -27,6 +38,11 @@ export function SignUpForm() {
 
   const [localError, setLocalError] = useState<string | null>(null)
   const [localPending, setLocalPending] = useState(false)
+
+  useEffect(() => {
+    trackSignUpStarted({ plan: selectedPlan })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleLocalSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -46,12 +62,13 @@ export function SignUpForm() {
     }
 
     setLocalPending(true)
+    markSignupPending()
     signUpLocally({ name, email, tradingExperience: null })
     router.push(redirectTo.startsWith("/") ? redirectTo : "/onboarding")
   }
 
   const formProps = isConfigured
-    ? { action: formAction }
+    ? { action: formAction, onSubmit: markSignupPending }
     : { onSubmit: handleLocalSubmit }
   const error = isConfigured ? state.error : localError
   const busy = isConfigured ? pending : localPending

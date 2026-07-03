@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useMemo } from "react"
 import {
   BarChart3Icon,
   BookOpenIcon,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { isPrivateBetaEnabled } from "@/lib/config/private-beta"
 
 const MOBILE_NAV_HREFS = [
   "/dashboard",
@@ -104,6 +106,13 @@ const mobileNavItems = MOBILE_NAV_HREFS.map(
 
 export function SidebarNav() {
   const pathname = usePathname()
+  const sections = useMemo(() => {
+    if (!isPrivateBetaEnabled()) return navSections
+    return navSections.map((section) => ({
+      ...section,
+      items: section.items.filter((item) => item.href !== "/pricing"),
+    }))
+  }, [])
 
   const isActive = (href: string) => {
     if (href === "/progression") {
@@ -127,11 +136,11 @@ export function SidebarNav() {
             <TrendingUpIcon className="text-primary" />
           </div>
           <Link href="/" className="font-semibold tracking-tight">
-            TradeTrainer <span className="text-primary">AI</span>
+            TradeTrainer <span className="text-primary">Academy</span>
           </Link>
         </div>
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
-          {navSections.map((section) => (
+          {sections.map((section) => (
             <div key={section.title || "root"}>
               {section.title && (
                 <p className="mb-1 mt-4 px-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70 first:mt-0">

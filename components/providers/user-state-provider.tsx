@@ -12,6 +12,7 @@ import {
 
 import { useMotivation } from "@/components/habits/motivation-provider"
 import { useAuth } from "@/components/providers/auth-provider"
+import { trackFirstLessonCompleted, trackLessonCompleted, trackQuizCompleted } from "@/lib/analytics/events"
 import type {
   BookLabStats,
   LibraryStats,
@@ -56,6 +57,7 @@ import {
   isStrategyLessonCompleted,
   isSyllabusItemCompleted,
   isTrendLessonCompleted,
+  createEmptyUserState,
   loadUserState,
   recordBookPracticeDrill,
   recordBookQuizAttempt,
@@ -102,12 +104,10 @@ import { createClientIfConfigured } from "@/lib/supabase/client"
 import {
   archiveProgressReset,
   fetchLearningState,
-  getAnonymousLocalState,
-  mergeLearningStates,
   saveLearningState,
-  syncProfileSummary,
 } from "@/lib/supabase/sync"
 import { syncNewActivityLogEvents } from "@/lib/data/activity-service"
+import { syncGamificationState } from "@/lib/data/gamification-sync-client"
 import {
   clearAnonymousProgress,
   isCloudPersistenceActive,
@@ -254,19 +254,27 @@ interface UserStateContextValue {
 const UserStateContext = createContext<UserStateContextValue | null>(null)
 
 export function UserStateProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<UserState>(() => loadUserState())
+  const { user, profile, isConfigured } = useAuth()
+  const cloudSession = isCloudPersistenceActive(isConfigured, user?.id)
+
+  const [state, setState] = useState<UserState>(() =>
+    cloudSession ? createEmptyUserState() : loadUserState()
+  )
   const [hydrated, setHydrated] = useState(false)
   const [syncStatus, setSyncStatus] = useState<"local" | "synced" | "syncing">(
-    "local"
+    cloudSession ? "syncing" : "local"
   )
   const { pushEvents } = useMotivation()
-  const { user, profile, isConfigured } = useAuth()
   const syncedActivityIdsRef = useRef(new Set<string>())
 
   useEffect(() => {
-    setState(loadUserState())
+    if (cloudSession) {
+      setState(createEmptyUserState())
+    } else {
+      setState(loadUserState())
+    }
     setHydrated(true)
-  }, [])
+  }, [cloudSession, user?.id])
 
   // Load cloud state when user signs in
   useEffect(() => {
@@ -282,22 +290,20 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
       if (!supabase) return
 
       setSyncStatus("syncing")
-      const local = getAnonymousLocalState()
       const remote = await fetchLearningState(supabase, user!.id)
-      const merged = mergeLearningStates(local, remote)
+      const next = remote ?? createEmptyUserState()
 
       if (!cancelled) {
-        setState(merged)
-        if (isCloudPersistenceActive(isConfigured, user!.id)) {
-          clearAnonymousProgress()
-        } else {
-          saveUserState(merged)
+        setState(next)
+        clearAnonymousProgress()
+        if (!remote) {
+          await saveLearningState(supabase, user!.id, next)
         }
         setSyncStatus("synced")
       }
     }
 
-    loadCloud()
+    void loadCloud()
     return () => {
       cancelled = true
     }
@@ -311,13 +317,19 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
 
       setSyncStatus("syncing")
       await saveLearningState(supabase, user.id, next)
-      await syncNewActivityLogEvents(
+      const { facts } = await syncNewActivityLogEvents(
         supabase,
         user.id,
         next.activityLog,
         syncedActivityIdsRef.current
       )
-      await syncProfileSummary(supabase, user.id, next)
+      // Gamification/entitlement fields (XP, level, streak, rank, stats)
+      // are no longer client-writable (migration 015). The client reports
+      // only event *facts* here — the trusted server route
+      // (/api/progress/record-activity) decides validity, idempotency, and
+      // XP amount, then recomputes XP/level/streak/rank from its own
+      // ledger via the service-role client.
+      await syncGamificationState(next, facts)
       setSyncStatus("synced")
     },
     [user, isConfigured]
@@ -387,7 +399,7 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
 
   const reset = useCallback(() => {
     resetUserProgress()
-    const fresh = loadUserState()
+    const fresh = createEmptyUserState()
     setState(fresh)
     void syncToCloud(fresh)
   }, [syncToCloud])
@@ -467,7 +479,8 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
         const { state: next, events } = claimChallengeReward(state, challengeId)
         if (events.length > 0) persistWithEvents(next, events)
       },
-      getLeaderboardData: (period) => getLeaderboard(state, period, displayName),
+      getLeaderboardData: (period) =>
+        getLeaderboard(state, period, displayName, { includeSeeded: false }),
       bookLabStats,
       libraryStats,
       libraryBookStats,
@@ -493,10 +506,20 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
         persistLearning(withXp)
       },
       startLearningPath: (pathId) => persist(startPath(state, pathId)),
-      markLessonComplete: (lessonId, xpReward, pathId) =>
-        persistLearning(completeLesson(state, lessonId, xpReward, pathId)),
-      recordQuizAttempt: (attempt, pathId, lessonId) =>
-        persistLearning(saveQuizAttempt(state, attempt, pathId, lessonId)),
+      markLessonComplete: (lessonId, xpReward, pathId) => {
+        const isFirstLesson = state.lessonProgress.length === 0
+        persistLearning(completeLesson(state, lessonId, xpReward, pathId))
+        trackLessonCompleted({ lessonId, source: pathId ?? undefined })
+        if (isFirstLesson) trackFirstLessonCompleted({ lessonId })
+      },
+      recordQuizAttempt: (attempt, pathId, lessonId) => {
+        persistLearning(saveQuizAttempt(state, attempt, pathId, lessonId))
+        trackQuizCompleted({
+          quizId: attempt.quizId,
+          score: attempt.score,
+          passed: attempt.score >= 70,
+        })
+      },
       recordDrillSession: (session, lessonId) =>
         persistLearning(saveDrillSession(state, session, lessonId)),
       addJournalEntry: (entry) =>
@@ -557,8 +580,18 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
         next = awardXP(next, XP_REWARDS.journalReflection)
         persistLearning(next)
       },
-      setWeeklyTargetDays: (days) =>
-        persist(setWeeklyTarget(state, days)),
+      setWeeklyTargetDays: (days) => {
+        // Guard against no-op syncs: this is called both from explicit user
+        // actions (goal-settings widget) and from settings-page hydration
+        // (mirroring the server-stored value into local UserState on load).
+        // The latter must never trigger a cloud sync/activity-record call —
+        // only real changes should. Without this guard, hydration call
+        // sites can spiral into an infinite `persist` loop; see
+        // `setWeeklyTarget` in lib/user-state/activity.ts for the other half
+        // of this fix.
+        if (state.weeklyTarget.daysPerWeek === days) return
+        persist(setWeeklyTarget(state, days))
+      },
       recordChartLabActivity: (scenarioId, title, score) => {
         const { state: next, events } = recordChartLabComplete(
           state,

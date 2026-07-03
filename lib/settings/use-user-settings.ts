@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { useMotivation } from "@/components/habits/motivation-provider"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -9,12 +9,12 @@ import {
   deleteLocalAccount,
   updateLocalProfile,
 } from "@/lib/auth/local-session"
+import { captureError } from "@/lib/observability/sentry"
 import { createClientIfConfigured } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { getDefaultSettings } from "@/lib/settings/defaults"
 import {
-  fetchProfileSettings,
-  fetchUserSettings,
+  fetchAuthenticatedSettingsBundle,
   mergeProfileIntoSettings,
   recordProgressReset,
   requestAccountDeletion,
@@ -44,35 +44,52 @@ export function useUserSettings() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isAuthenticatedSupabase =
+    isSupabaseConfigured() && authMode === "supabase" && Boolean(user)
+
+  // `setWeeklyTargetDays` and `state` come from `UserStateProvider`, whose
+  // action callbacks are re-created (new identity) on every `state` change —
+  // including the change caused by calling `setWeeklyTargetDays` itself.
+  // Depending on either of them directly in the effect below previously
+  // caused an infinite loop: load → hydrate weekly target → new state → new
+  // `setWeeklyTargetDays` identity → effect deps changed → reload → repeat,
+  // firing a `/api/progress/record-activity` request on every iteration.
+  // Reading them via refs lets the effect use their *latest* value without
+  // re-running when they merely change identity.
+  const setWeeklyTargetDaysRef = useRef(setWeeklyTargetDays)
+  setWeeklyTargetDaysRef.current = setWeeklyTargetDays
+  const weeklyTargetDaysRef = useRef(state.weeklyTarget.daysPerWeek)
+  weeklyTargetDaysRef.current = state.weeklyTarget.daysPerWeek
+
   useEffect(() => {
     let cancelled = false
     async function load() {
       setLoading(true)
-      let bundle = loadSettingsFromStorage()
 
-      if (isSupabaseConfigured() && user) {
+      if (isAuthenticatedSupabase && user) {
         const supabase = createClientIfConfigured()
         if (supabase) {
-          const [remote, profileSettings] = await Promise.all([
-            fetchUserSettings(supabase, user.id),
-            fetchProfileSettings(supabase, user.id),
-          ])
-          if (remote) bundle = { ...bundle, ...remote }
-          if (profileSettings) {
-            bundle = {
-              ...bundle,
-              profile: { ...bundle.profile, ...profileSettings.profile },
-              privacy: { ...bundle.privacy, ...profileSettings.privacy },
-            }
-          } else {
-            bundle = mergeProfileIntoSettings(bundle, profile)
+          const bundle = await fetchAuthenticatedSettingsBundle(
+            supabase,
+            user.id
+          )
+          if (!cancelled) {
+            setSettings(bundle)
+            // Hydration only — mirrors the server value into local
+            // UserState. Never treated as a learner action; the provider's
+            // own no-op guard also prevents this from persisting/syncing
+            // when the value already matches.
+            setWeeklyTargetDaysRef.current(bundle.profile.weeklyTargetDays)
+            setLoading(false)
           }
+          return
         }
-      } else {
-        bundle = mergeProfileIntoSettings(bundle, profile)
-        bundle.profile.weeklyTargetDays =
-          state.weeklyTarget.daysPerWeek ?? bundle.profile.weeklyTargetDays
       }
+
+      let bundle = loadSettingsFromStorage()
+      bundle = mergeProfileIntoSettings(bundle, profile)
+      bundle.profile.weeklyTargetDays =
+        weeklyTargetDaysRef.current ?? bundle.profile.weeklyTargetDays
 
       if (!cancelled) {
         setSettings(bundle)
@@ -83,7 +100,7 @@ export function useUserSettings() {
     return () => {
       cancelled = true
     }
-  }, [profile, user, state.weeklyTarget.daysPerWeek])
+  }, [isAuthenticatedSupabase, profile, user])
 
   const save = useCallback(
     async (next: UserSettingsBundle) => {
@@ -91,23 +108,31 @@ export function useUserSettings() {
       setError(null)
       const stamped = { ...next, updatedAt: new Date().toISOString() }
       setSettings(stamped)
-      saveSettingsToStorage(stamped)
       setWeeklyTargetDays(stamped.profile.weeklyTargetDays)
 
       if (authMode === "local") {
+        saveSettingsToStorage(stamped)
         updateLocalProfile({
           name: stamped.profile.displayName,
           country: stamped.profile.country || null,
           tradingExperience: stamped.profile.tradingExperience,
         })
         await refresh()
+        setSaving(false)
+        toastSaved(pushEvents)
+        return true
       }
 
-      if (isSupabaseConfigured() && user) {
+      if (isAuthenticatedSupabase && user) {
         const supabase = createClientIfConfigured()
         if (supabase) {
           const saveResult = await saveUserSettings(supabase, user.id, stamped)
           if (saveResult.error) {
+            captureError(new Error(saveResult.error), {
+              flow: "settings-save",
+              stage: "user-settings",
+              userId: user.id,
+            })
             setError(saveResult.error)
             setSaving(false)
             return false
@@ -118,19 +143,41 @@ export function useUserSettings() {
             stamped
           )
           if (profileResult.error) {
+            captureError(new Error(profileResult.error), {
+              flow: "settings-save",
+              stage: "profile",
+              userId: user.id,
+            })
             setError(profileResult.error)
             setSaving(false)
             return false
           }
           await refresh()
+          const refreshed = await fetchAuthenticatedSettingsBundle(
+            supabase,
+            user.id
+          )
+          setSettings(refreshed)
+          setWeeklyTargetDays(refreshed.profile.weeklyTargetDays)
         }
+        setSaving(false)
+        toastSaved(pushEvents)
+        return true
       }
 
+      saveSettingsToStorage(stamped)
       setSaving(false)
       toastSaved(pushEvents)
       return true
     },
-    [authMode, pushEvents, refresh, setWeeklyTargetDays, user]
+    [
+      authMode,
+      isAuthenticatedSupabase,
+      pushEvents,
+      refresh,
+      setWeeklyTargetDays,
+      user,
+    ]
   )
 
   const updateSettings = useCallback((patch: Partial<UserSettingsBundle>) => {

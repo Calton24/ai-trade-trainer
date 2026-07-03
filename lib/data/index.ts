@@ -18,13 +18,10 @@ export {
 export { recordXpEvent, syncUserStats } from "./xp-service"
 export { fetchUserStats, type UserStatsRow } from "./stats-service"
 export {
-  recordActivityCompletion,
   syncNewActivityLogEvents,
   upsertUserProgress,
 } from "./activity-service"
+export { syncGamificationState } from "./gamification-sync-client"
 export { loadSettings, saveSettings } from "./settings-service"
 export { fetchPublicLeaderboard } from "./leaderboard-service"
-export {
-  fetchUserSubscription,
-  setTestSubscription,
-} from "./subscription-service"
+export { fetchUserSubscription } from "./subscription-service"
