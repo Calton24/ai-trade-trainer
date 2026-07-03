@@ -162,16 +162,44 @@ Use test mode for private beta unless you want real charges.
 
 ---
 
-## 5. Domain setup
+## 5. Domain + Supabase Auth URLs
 
 1. Vercel → Project → Settings → Domains
 2. Add your domain, follow DNS instructions
-3. Set `NEXT_PUBLIC_SITE_URL` to the canonical URL
-4. Supabase → Authentication → URL Configuration:
-   - Site URL: `https://yourdomain.com`
-   - Redirect URLs: add `https://yourdomain.com/auth/callback`
+3. Set `NEXT_PUBLIC_SITE_URL` to the canonical URL (must match the live host)
+
+### Supabase Auth URL configuration (required for email confirmation)
+
+Supabase Dashboard → **Authentication → URL Configuration**:
+
+| Setting | Value |
+|---------|--------|
+| **Site URL** | `https://tradetraineracademy.vercel.app` |
+
+**Redirect URLs** (add all of these):
+
+```
+https://tradetraineracademy.vercel.app/auth/callback
+https://tradetraineracademy.vercel.app/**
+http://localhost:3000/auth/callback
+http://localhost:3000/**
+```
+
+Signup uses:
+
+```
+${NEXT_PUBLIC_SITE_URL}/auth/callback?redirect=/onboarding
+```
+
+If Site URL / Redirect URLs are wrong, Supabase may still confirm the email
+(`confirmed_at` set) but the browser lands on sign-in without a session.
+In that case the UI shows: **“Email confirmed. Please sign in to continue.”**
+
+Mobile mail apps sometimes prefetch confirmation links (consuming the one-time
+code). Email is confirmed, but auto sign-in fails — manual sign-in is expected.
 
 ---
+
 
 ## 6. Post-deploy smoke tests
 

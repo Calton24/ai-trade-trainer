@@ -14,14 +14,14 @@ interface HeaderProps {
 const marketingLinks = [
   { href: "/#features", label: "Features" },
   { href: "/#journey", label: "Journey" },
-  { href: "/#books", label: "Books" },
+  { href: "/#pricing", label: "Pricing" },
   { href: "/#plans", label: "Plans" },
-  { href: "/pricing", label: "Pricing" },
 ]
 
 export function Header({ variant = "marketing" }: HeaderProps) {
+  // Keep in-page pricing anchor during private beta; hide only the /pricing route.
   const links = isPrivateBetaEnabled()
-    ? marketingLinks.filter((link) => link.href !== "/pricing")
+    ? marketingLinks.filter((link) => !link.href.startsWith("/pricing"))
     : marketingLinks
 
   return (

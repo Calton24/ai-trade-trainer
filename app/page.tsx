@@ -1,12 +1,12 @@
 import type { Metadata } from "next"
 
 import { Hero } from "@/components/landing/hero"
+import { InteractiveLearningPath } from "@/components/landing/learning-path"
 import {
   BooksIncluded,
   CompetencySystem,
   EverythingIncluded,
   FinalCtaSection,
-  LearningJourney,
   PracticePreview,
   PricingTeaser,
   StudyPlans,
@@ -19,7 +19,7 @@ import { Header } from "@/components/layout/header"
 export const metadata: Metadata = {
   title: "TradeTrainer Academy — Become a Competent Trader",
   description:
-    "A structured, university-style trading programme: lessons, a book library, chart labs, a market simulator, competency scoring, and live-trading readiness.",
+    "A structured trading programme: interactive lessons, chart labs, a market simulator, competency scoring, and live-trading readiness.",
 }
 
 export default function LandingPage() {
@@ -30,7 +30,7 @@ export default function LandingPage() {
         <Hero />
         <WhyTradersFail />
         <EverythingIncluded />
-        <LearningJourney />
+        <InteractiveLearningPath />
         <BooksIncluded />
         <PracticePreview />
         <CompetencySystem />

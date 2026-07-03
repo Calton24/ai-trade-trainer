@@ -27,9 +27,17 @@ export function SignInForm() {
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
-    if (queryError) {
-      setError(decodeURIComponent(queryError))
+    if (!queryError) return
+    const decoded = decodeURIComponent(queryError)
+    if (
+      decoded === "auth_callback_failed" ||
+      decoded.toLowerCase().includes("email confirmed")
+    ) {
+      setError(null)
+      setInfo("Email confirmed. Please sign in to continue.")
+      return
     }
+    setError(decoded)
   }, [queryError])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

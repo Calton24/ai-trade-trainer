@@ -15,6 +15,7 @@ export const PUBLIC_PREFIXES = [
   "/testimonials",
   "/terms",
   "/privacy",
+  "/refund",
   "/risk-disclaimer",
   "/sign-in",
   "/sign-up",

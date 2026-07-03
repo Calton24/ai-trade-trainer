@@ -21,7 +21,7 @@ export function PathsContent() {
           </h1>
           <p className="text-muted-foreground">
             Structured courses with real modules, lessons, quizzes, and chart
-            drills — like Codecademy for trading
+            drills
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             {TIME_ESTIMATE_NOTE}

@@ -1,6 +1,6 @@
 # TradeTrainer Academy
 
-The Codecademy-style platform for learning trading step by step.
+Structured trading education — lessons, chart drills, quizzes, and competency tracking.
 
 > **Educational simulator only.** No financial advice, trading signals, or profit guarantees.
 

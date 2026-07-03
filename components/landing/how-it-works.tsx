@@ -43,7 +43,7 @@ export function HowItWorks() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-medium text-primary">Learn by doing</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            The Codecademy approach to trading
+            Learn trading by doing
           </h2>
           <p className="mt-4 text-muted-foreground">
             Read a lesson, take a quiz, practice on a chart, get feedback, and

@@ -6,7 +6,7 @@ const struggles = [
   {
     title: "Too much theory, not enough practice",
     description:
-      "Watching videos doesn't build chart-reading skills. You need hands-on repetition with feedback — like Codecademy for trading.",
+      "Watching videos doesn't build chart-reading skills. You need hands-on repetition with feedback on real chart decisions.",
   },
   {
     title: "No clear learning path",

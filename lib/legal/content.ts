@@ -87,12 +87,46 @@ export const LEGAL_DOCUMENTS: Record<string, LegalSection[]> = {
   ],
   refund: [
     {
-      id: "refund",
-      title: "Refund Policy",
+      id: "overview",
+      title: "Overview",
       body: [
-        "Subscription refunds are handled according to the billing provider's policy at the time of purchase.",
-        "Contact support with your account email if you believe a charge was made in error.",
-        "This is a placeholder policy until Stripe billing is fully configured.",
+        "This Refund / Cancellation Policy explains how paid TradeTrainer Academy subscriptions can be cancelled and when refunds may apply.",
+        "TradeTrainer Academy is an educational digital product. Access is delivered immediately after a successful subscription payment or an approved beta grant.",
+      ],
+    },
+    {
+      id: "cancellation",
+      title: "Cancellation",
+      body: [
+        "You may cancel a paid subscription at any time from Settings → Billing using Manage subscription (Stripe Customer Portal), or by contacting support with the email on your account.",
+        "Cancellation stops future renewals. You keep Pro access until the end of the current paid billing period.",
+        "Admin-granted beta access may be revoked by TradeTrainer Academy at any time and expires automatically on the grant end date.",
+      ],
+    },
+    {
+      id: "refunds",
+      title: "Refunds",
+      body: [
+        "Because digital access is provided immediately, subscription fees are generally non-refundable once the billing period has started.",
+        "If you believe you were charged in error, contact support within 7 days of the charge with your account email and payment details.",
+        "We may issue a refund at our discretion for duplicate charges, confirmed billing errors, or other exceptional circumstances.",
+        "Refunds, when approved, are returned to the original payment method and may take several business days to appear.",
+      ],
+    },
+    {
+      id: "trials-and-beta",
+      title: "Trials and private beta",
+      body: [
+        "Private beta access granted without payment does not create a refund entitlement.",
+        "If a free trial is offered in the future, trial terms will be shown at checkout and will control over this policy where they conflict.",
+      ],
+    },
+    {
+      id: "contact",
+      title: "Contact",
+      body: [
+        "For cancellation or refund requests, contact support with the email address on your TradeTrainer Academy account.",
+        "We aim to respond to billing requests within a reasonable time during business days.",
       ],
     },
   ],

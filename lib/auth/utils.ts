@@ -1,7 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 export function getAuthSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "")
+  if (configured) return configured
+
+  // Vercel provides the deployment host when SITE_URL is not set yet.
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  if (vercel) return `https://${vercel.replace(/^https?:\/\//, "")}`
+
+  return "http://localhost:3000"
 }
 
 export function getAuthCallbackUrl(redirect = "/dashboard"): string {
