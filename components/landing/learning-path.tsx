@@ -59,10 +59,7 @@ const STEPS = [
   },
 ] as const
 
-/**
- * Desktop path in a 1000×200 viewBox.
- * Y stays in a narrow band so labels below nodes never collide.
- */
+/** Desktop path in a 1000×200 viewBox — gentle wave, room for labels below. */
 const DESKTOP_VB = { w: 1000, h: 200 }
 const DESKTOP_POINTS = [
   [90, 110],
@@ -99,7 +96,7 @@ export function InteractiveLearningPath() {
         setDrawn(true)
         observer.disconnect()
       },
-      { threshold: 0.25 }
+      { threshold: 0.2 }
     )
 
     observer.observe(node)
@@ -151,12 +148,8 @@ export function InteractiveLearningPath() {
 
         {/* Desktop interactive path */}
         <Reveal delayMs={100} className="mt-14 hidden md:block">
-          <div className="rounded-3xl border border-border/60 bg-card/30 px-4 pb-4 pt-8 lg:px-8 lg:pb-6 lg:pt-10">
-            <div className="pointer-events-none relative mx-auto w-full max-w-5xl">
-              {/*
-                Shared coordinate box for SVG + nodes.
-                Extra bottom padding reserves space for labels under icons.
-              */}
+          <div className="rounded-3xl border border-border/60 bg-card/30 px-4 pb-12 pt-10 lg:px-8 lg:pb-14 lg:pt-12">
+            <div className="relative mx-auto w-full max-w-5xl">
               <div
                 className="relative w-full"
                 style={{ aspectRatio: `${DESKTOP_VB.w} / ${DESKTOP_VB.h}` }}
@@ -204,16 +197,18 @@ export function InteractiveLearningPath() {
                 {DESKTOP_POINTS.map(([x, y], index) => {
                   const step = STEPS[index]
                   const Icon = step.icon
-                  const isLit = drawn && index <= activeIndex
                   const isSelected = selected === index
+                  const isReached = index <= selected
+                  const isFuture = index > selected
 
                   return (
                     <button
                       key={step.id}
                       type="button"
                       className={cn(
-                        "landing-path-node pointer-events-auto absolute z-10 size-12 -translate-x-1/2 -translate-y-1/2",
-                        isLit && "is-active"
+                        "absolute flex size-12 -translate-x-1/2 -translate-y-1/2 flex-col items-center",
+                        isSelected ? "z-30" : isReached ? "z-20" : "z-10",
+                        isFuture ? "opacity-45" : "opacity-100"
                       )}
                       style={{
                         left: `${(x / DESKTOP_VB.w) * 100}%`,
@@ -227,25 +222,33 @@ export function InteractiveLearningPath() {
                       aria-pressed={isSelected}
                       aria-label={`${step.label}: ${step.title}`}
                     >
+                      {/* Opaque bg-card base so the path line never shows through */}
                       <span
                         className={cn(
-                          "flex size-12 items-center justify-center rounded-full border-2 bg-background shadow-md transition-colors",
+                          "relative flex size-12 items-center justify-center overflow-hidden rounded-full border-2 bg-card shadow-md transition-colors",
                           isSelected
-                            ? "border-primary bg-primary/15 text-primary shadow-primary/25 ring-4 ring-primary/10"
-                            : isLit
-                              ? "border-primary/70 text-primary"
+                            ? "border-primary text-primary shadow-primary/25 ring-4 ring-primary/15"
+                            : isReached
+                              ? "border-primary/60 text-primary"
                               : "border-border text-muted-foreground"
                         )}
                       >
-                        <Icon className="size-5" />
+                        {(isSelected || isReached) && (
+                          <span
+                            className="absolute inset-0 bg-primary/15"
+                            aria-hidden
+                          />
+                        )}
+                        <Icon className="relative z-10 size-5" aria-hidden />
                       </span>
-                      {/* Label is out-of-flow so it never shifts the icon off the path */}
                       <span
                         className={cn(
-                          "pointer-events-none absolute top-[calc(100%+10px)] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium",
+                          "pointer-events-none absolute top-[calc(100%+10px)] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-border/60 bg-card px-2.5 py-0.5 text-xs font-medium shadow-sm",
                           isSelected
-                            ? "bg-primary/15 text-primary"
-                            : "bg-background/90 text-muted-foreground"
+                            ? "border-primary/30 text-primary"
+                            : isReached
+                              ? "text-foreground/80"
+                              : "text-muted-foreground"
                         )}
                       >
                         {step.label}
@@ -254,9 +257,6 @@ export function InteractiveLearningPath() {
                   )
                 })}
               </div>
-
-              {/* Reserved label row so labels never clip the card edge */}
-              <div className="h-10" aria-hidden />
             </div>
           </div>
         </Reveal>
@@ -269,32 +269,22 @@ export function InteractiveLearningPath() {
                 className="absolute top-6 bottom-6 left-[1.375rem] w-0.5 bg-border"
                 aria-hidden
               />
-              <div
-                className={cn(
-                  "absolute top-6 left-[1.375rem] w-0.5 origin-top bg-primary transition-transform duration-1000 ease-out",
-                  drawn ? "scale-y-100" : "scale-y-0"
-                )}
-                style={{
-                  height: `calc(${(Math.min(activeIndex, STEPS.length - 1) / (STEPS.length - 1)) * 100}% - 1.5rem)`,
-                  maxHeight: "calc(100% - 3rem)",
-                }}
-                aria-hidden
-              />
 
               {STEPS.map((step, index) => {
                 const Icon = step.icon
-                const isLit = drawn && index <= activeIndex
                 const isSelected = selected === index
+                const isReached = index <= selected
+                const isFuture = index > selected
                 return (
                   <li key={step.id}>
                     <button
                       type="button"
                       className={cn(
-                        "landing-path-node relative flex w-full items-start gap-4 rounded-2xl border bg-background/80 p-4 text-left transition-colors",
-                        isLit && "is-active",
+                        "relative flex w-full items-start gap-4 rounded-2xl border bg-background/80 p-4 text-left transition-colors",
                         isSelected
-                          ? "border-primary/50 ring-1 ring-primary/30"
-                          : "border-border/60"
+                          ? "z-20 border-primary/50 ring-1 ring-primary/30"
+                          : "border-border/60",
+                        isFuture && "opacity-50"
                       )}
                       onClick={() => {
                         setActiveIndex(index)
@@ -305,15 +295,24 @@ export function InteractiveLearningPath() {
                       <span
                         className={cn(
                           "relative z-10 flex size-11 shrink-0 items-center justify-center rounded-full border-2 bg-background",
-                          isSelected || isLit
+                          isSelected
                             ? "border-primary bg-primary/15 text-primary"
-                            : "border-border text-muted-foreground"
+                            : isReached
+                              ? "border-primary/60 text-primary"
+                              : "border-border text-muted-foreground"
                         )}
                       >
-                        <Icon className="size-5" />
+                        <Icon className="size-5" aria-hidden />
                       </span>
                       <span className="min-w-0">
-                        <span className="text-xs font-medium text-primary">
+                        <span
+                          className={cn(
+                            "text-xs font-medium",
+                            isSelected || isReached
+                              ? "text-primary"
+                              : "text-muted-foreground"
+                          )}
+                        >
                           {step.label}
                         </span>
                         <span className="mt-0.5 block font-semibold">

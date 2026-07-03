@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { Loader2Icon } from "lucide-react"
 
-import { AuthDivider, OAuthButtons } from "@/components/auth/oauth-buttons"
 import { useAuth } from "@/components/providers/auth-provider"
 import { signInWithEmailClient } from "@/lib/auth/client-auth"
 import { Button } from "@/components/ui/button"
@@ -74,60 +74,84 @@ export function SignInForm() {
     router.push(redirectTo.startsWith("/") ? redirectTo : "/dashboard")
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <OAuthButtons redirectTo={redirectTo} />
-      {isConfigured && <AuthDivider />}
+  const signUpHref =
+    redirectTo !== "/dashboard"
+      ? `/sign-up?redirect=${encodeURIComponent(redirectTo)}`
+      : "/sign-up"
 
-      <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
+  return (
+    <form
+      onSubmit={(event) => void handleSubmit(event)}
+      className="flex flex-col gap-5"
+    >
+      {info && (
+        <p className="rounded-xl border border-primary/25 bg-primary/10 px-3.5 py-2.5 text-sm text-primary">
+          {info}
+        </p>
+      )}
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          autoFocus
+          placeholder="you@example.com"
+          className="h-11"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            required={isConfigured}
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </div>
-        {info && (
-          <p className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
-            {info}
-          </p>
-        )}
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={pending}>
-          {pending ? "Signing in..." : "Sign in"}
-        </Button>
-        <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
-          <Link href="/forgot-password" className="hover:text-foreground">
+          <Link
+            href="/forgot-password"
+            className="text-xs text-muted-foreground transition-colors hover:text-primary"
+          >
             Forgot password?
           </Link>
-          <p>
-            No account?{" "}
-            <Link
-              href={`/sign-up${redirectTo !== "/dashboard" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
-              className="text-primary hover:underline"
-            >
-              Sign up
-            </Link>
-          </p>
         </div>
-      </form>
-    </div>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          required={isConfigured}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          className="h-11"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+      </div>
+
+      {error && (
+        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
+        {pending ? (
+          <>
+            <Loader2Icon className="animate-spin" data-icon="inline-start" />
+            Signing in…
+          </>
+        ) : (
+          "Sign in"
+        )}
+      </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        No account?{" "}
+        <Link href={signUpHref} className="font-medium text-primary hover:underline">
+          Sign up
+        </Link>
+      </p>
+    </form>
   )
 }

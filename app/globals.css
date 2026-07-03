@@ -166,21 +166,6 @@
   }
 }
 
-@keyframes landing-node-pop {
-  0% {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  70% {
-    transform: scale(1.08);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
 .landing-reveal {
   opacity: 0;
   transform: translateY(18px);
@@ -208,28 +193,10 @@
   stroke-dashoffset: 0;
 }
 
-.landing-path-node {
-  opacity: 0;
-  transform: scale(0.6);
-  transition:
-    opacity 0.35s ease,
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.35s ease,
-    border-color 0.35s ease,
-    background-color 0.35s ease;
-}
-
-.landing-path-node.is-active {
-  opacity: 1;
-  transform: scale(1);
-  animation: landing-node-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .landing-reveal,
   .landing-float,
-  .landing-path-line,
-  .landing-path-node {
+  .landing-path-line {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;

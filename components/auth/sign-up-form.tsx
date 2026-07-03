@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
+import { Loader2Icon } from "lucide-react"
 
-import { AuthDivider, OAuthButtons } from "@/components/auth/oauth-buttons"
 import { useAuth } from "@/components/providers/auth-provider"
 import { signUp, type AuthActionResult } from "@/lib/auth/actions"
 import { trackSignUpStarted } from "@/lib/analytics/events"
@@ -15,12 +15,12 @@ import { Label } from "@/components/ui/label"
 
 const initialState: AuthActionResult = {}
 
-/** Marks that a signup just happened so the onboarding page can fire `sign_up_completed` once it lands, regardless of whether the flow went through the Supabase server action redirect or the local-mode client redirect. */
+/** Marks that a signup just happened so the onboarding page can fire `sign_up_completed` once it lands. */
 function markSignupPending() {
   try {
     sessionStorage.setItem(SIGNUP_PENDING_STORAGE_KEY, "1")
   } catch {
-    // sessionStorage unavailable (private mode, etc.) — non-critical, skip.
+    // sessionStorage unavailable — non-critical.
   }
 }
 
@@ -73,56 +73,96 @@ export function SignUpForm() {
   const error = isConfigured ? state.error : localError
   const busy = isConfigured ? pending : localPending
 
-  return (
-    <div className="flex flex-col gap-4">
-      <OAuthButtons redirectTo={redirectTo} />
-      {isConfigured && <AuthDivider />}
+  const signInHref =
+    redirectTo !== "/dashboard" && redirectTo !== "/onboarding"
+      ? `/sign-in?redirect=${encodeURIComponent(redirectTo)}`
+      : "/sign-in"
 
-      <form {...formProps} className="flex flex-col gap-4">
-        <input type="hidden" name="redirect" value={redirectTo} />
-        {selectedPlan && (
-          <input type="hidden" name="plan" value={selectedPlan} />
-        )}
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" name="name" required autoComplete="name" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete="new-password"
-          />
-          <p className="text-xs text-muted-foreground">At least 8 characters</p>
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={busy}>
-          {busy ? "Creating account..." : "Create account"}
-        </Button>
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link
-            href={`/sign-in${redirectTo !== "/dashboard" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
-            className="text-primary hover:underline"
-          >
-            Sign in
-          </Link>
+  return (
+    <form {...formProps} className="flex flex-col gap-5">
+      <input type="hidden" name="redirect" value={redirectTo} />
+      {selectedPlan && (
+        <input type="hidden" name="plan" value={selectedPlan} />
+      )}
+
+      <div className="space-y-2">
+        <Label htmlFor="name">Name</Label>
+        <Input
+          id="name"
+          name="name"
+          required
+          autoComplete="name"
+          autoFocus
+          placeholder="Your name"
+          className="h-11"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="you@example.com"
+          className="h-11"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          autoComplete="new-password"
+          placeholder="At least 8 characters"
+          className="h-11"
+        />
+        <p className="text-xs text-muted-foreground">
+          Use at least 8 characters.
         </p>
-      </form>
-    </div>
+      </div>
+
+      {error && (
+        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      <Button type="submit" size="lg" className="w-full" disabled={busy}>
+        {busy ? (
+          <>
+            <Loader2Icon className="animate-spin" data-icon="inline-start" />
+            Creating account…
+          </>
+        ) : (
+          "Create account"
+        )}
+      </Button>
+
+      <p className="text-center text-xs leading-relaxed text-muted-foreground">
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="text-foreground/80 hover:text-primary">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="text-foreground/80 hover:text-primary">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href={signInHref} className="font-medium text-primary hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </form>
   )
 }

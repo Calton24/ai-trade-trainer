@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
+import { Loader2Icon } from "lucide-react"
 
 import { resetPassword, type AuthActionResult } from "@/lib/auth/actions"
 import { Button } from "@/components/ui/button"
@@ -17,7 +18,7 @@ export function ResetPasswordForm() {
   )
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="flex flex-col gap-5">
       <div className="space-y-2">
         <Label htmlFor="password">New password</Label>
         <Input
@@ -27,13 +28,25 @@ export function ResetPasswordForm() {
           required
           minLength={8}
           autoComplete="new-password"
+          autoFocus
+          placeholder="At least 8 characters"
+          className="h-11"
         />
       </div>
       {state.error && (
-        <p className="text-sm text-destructive">{state.error}</p>
+        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+          {state.error}
+        </p>
       )}
-      <Button type="submit" disabled={pending}>
-        {pending ? "Updating..." : "Update password"}
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
+        {pending ? (
+          <>
+            <Loader2Icon className="animate-spin" data-icon="inline-start" />
+            Updating…
+          </>
+        ) : (
+          "Update password"
+        )}
       </Button>
     </form>
   )

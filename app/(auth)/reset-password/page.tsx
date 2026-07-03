@@ -9,10 +9,14 @@ export const metadata: Metadata = {
 export default function ResetPasswordPage() {
   return (
     <>
-      <h1 className="text-xl font-semibold">Set a new password</h1>
-      <p className="mt-1 mb-6 text-sm text-muted-foreground">
-        Choose a strong password with at least 8 characters.
-      </p>
+      <div className="mb-6 text-center sm:text-left">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Set a new password
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Choose a strong password with at least 8 characters.
+        </p>
+      </div>
       <ResetPasswordForm />
     </>
   )

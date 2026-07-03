@@ -11,11 +11,17 @@ export const metadata: Metadata = {
 export default function SignInPage() {
   return (
     <>
-      <h1 className="text-xl font-semibold">Welcome back</h1>
-      <p className="mt-1 mb-6 text-sm text-muted-foreground">
-        Sign in to sync your progress across devices.
-      </p>
-      <Suspense fallback={null}>
+      <div className="mb-6 text-center sm:text-left">
+        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Sign in with your email to continue learning.
+        </p>
+      </div>
+      <Suspense
+        fallback={
+          <div className="h-48 animate-pulse rounded-xl bg-muted/40" />
+        }
+      >
         <SignInForm />
       </Suspense>
     </>
