@@ -9,6 +9,7 @@ import {
   SwingLabeler,
   TrendBuilder,
 } from "./market-structure"
+import { StructureReplay } from "./structure-replay"
 import { MatchPairs } from "./match-pairs"
 import { OrderSteps } from "./order-steps"
 import {
@@ -20,7 +21,13 @@ import { SortBuckets } from "./sort-buckets"
 import { DailyChecklist, JournalReview, WatchlistBuilder } from "./workflow"
 
 /** Renders any interactive lesson widget from its typed config. */
-export function LessonWidgetRenderer({ widget }: { widget: LessonWidget }) {
+export function LessonWidgetRenderer({
+  widget,
+  lessonId,
+}: {
+  widget: LessonWidget
+  lessonId?: string
+}) {
   switch (widget.kind) {
     case "sort-buckets":
       return <SortBuckets widget={widget} />
@@ -49,11 +56,13 @@ export function LessonWidgetRenderer({ widget }: { widget: LessonWidget }) {
     case "journal-review":
       return <JournalReview widget={widget} />
     case "swing-labeler":
-      return <SwingLabeler widget={widget} />
+      return <SwingLabeler widget={widget} lessonId={lessonId} />
     case "continuation-predictor":
-      return <ContinuationPredictor widget={widget} />
+      return <ContinuationPredictor widget={widget} lessonId={lessonId} />
     case "trend-builder":
-      return <TrendBuilder widget={widget} />
+      return <TrendBuilder widget={widget} lessonId={lessonId} />
+    case "structure-replay":
+      return <StructureReplay widget={widget} lessonId={lessonId} />
     default:
       return null
   }

@@ -8,6 +8,7 @@ import { marketStructureCards } from "@/content/flashcards/market-structure"
 import { marketStructureMasteryCards } from "@/content/flashcards/market-structure-mastery"
 import { professionalForexCards } from "@/content/flashcards/professional-forex"
 import { psychologyCards } from "@/content/flashcards/psychology"
+import { reversalAcademyCards } from "@/content/flashcards/reversal-academy"
 import { riskManagementCards } from "@/content/flashcards/risk-management"
 import { supportResistanceCards } from "@/content/flashcards/support-resistance"
 import { trendSpotterCards } from "@/content/flashcards/trend-spotter"
@@ -120,6 +121,15 @@ export const FLASHCARD_DECK_DEFS: Omit<FlashcardDeck, "cardIds">[] = [
     difficulty: "advanced",
   },
   {
+    id: "deck-reversal-academy",
+    slug: "reversal-academy",
+    title: "Reversal Academy",
+    description:
+      "Pullback, reversal, continuation, four-point rule, BOS, liquidity, and EOD workflow.",
+    category: "Market Behaviour",
+    difficulty: "intermediate",
+  },
+  {
     id: "deck-market-structure-mastery",
     slug: "market-structure-mastery",
     title: "Market Structure Mastery",
@@ -144,6 +154,7 @@ export const ALL_FLASHCARD_ARRAYS = [
   chartCards,
   professionalForexCards,
   marketStructureMasteryCards,
+  reversalAcademyCards,
 ]
 
 export const DECK_SLUG_TO_CARDS: Record<string, typeof tradingBasicsCards> = {
@@ -161,4 +172,5 @@ export const DECK_SLUG_TO_CARDS: Record<string, typeof tradingBasicsCards> = {
   "chart-cards": chartCards,
   "professional-forex": professionalForexCards,
   "market-structure-mastery": marketStructureMasteryCards,
+  "reversal-academy": reversalAcademyCards,
 }

@@ -165,6 +165,36 @@ export interface TrendBuilderWidget {
   pointCount: number
 }
 
+/** Scenario kinds supported by the structure-replay widget. */
+export type StructureReplayScenarioKind =
+  | "uptrend"
+  | "downtrend"
+  | "ranging"
+  | "uptrend-reversal"
+  | "downtrend-reversal"
+
+/**
+ * Structure Replay: reveal real candles one at a time, then answer a
+ * structure question at the pause point — the bridge to full replay drills.
+ */
+export interface StructureReplayWidget {
+  kind: "structure-replay"
+  prompt: string
+  scenarioKind: StructureReplayScenarioKind
+  seed: string
+  /** First visible candle index. Defaults to 8. */
+  startIndex?: number
+  /** Candle index where the question unlocks. */
+  pauseIndex: number
+  task: "classify-trend" | "predict-continuation"
+  /** For classify-trend tasks. */
+  correctTrend?: "Uptrend" | "Downtrend" | "Range" | "Transition"
+  /** For predict-continuation tasks. */
+  options?: string[]
+  correct?: string
+  explain: string
+}
+
 export type LessonWidget =
   | SortBucketsWidget
   | MatchPairsWidget
@@ -182,3 +212,4 @@ export type LessonWidget =
   | SwingLabelerWidget
   | ContinuationPredictorWidget
   | TrendBuilderWidget
+  | StructureReplayWidget

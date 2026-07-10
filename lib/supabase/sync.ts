@@ -11,7 +11,7 @@ import { computeAllLibraryBookStats } from "@/lib/user-state/library"
 import { computeTraderReadinessStats } from "@/lib/user-state/trader-readiness"
 import type { UserState } from "@/lib/user-state/types"
 import { getDefaultPhaseState } from "@/lib/competence/live-trading-phases"
-import { loadUserState } from "@/lib/user-state"
+import { loadUserState, normalizeUserState } from "@/lib/user-state"
 import {
   normalizeExperienceLevel,
   normalizeLearningPlan,
@@ -43,7 +43,7 @@ export async function fetchLearningState(
   const parsed = data.state_json as Partial<UserState>
   if (!parsed.progress) return null
 
-  return parsed as UserState
+  return normalizeUserState(parsed)
 }
 
 export async function saveLearningState(
@@ -244,7 +244,7 @@ export function mergeAnonymousPreviewState(
   const remoteIdx = phaseOrder.indexOf(remotePhase.currentPhase)
   const advancedPhase = remoteIdx > localIdx ? remotePhase : localPhase
 
-  return {
+  return normalizeUserState({
     ...merged,
     gamification:
       merged.gamification ?? local.gamification ?? remote.gamification,
@@ -257,7 +257,7 @@ export function mergeAnonymousPreviewState(
       strategyClarityPassed:
         localPhase.strategyClarityPassed || remotePhase.strategyClarityPassed,
     },
-  }
+  })
 }
 
 /** @deprecated Use mergeAnonymousPreviewState — anonymous preview only. */

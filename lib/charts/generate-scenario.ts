@@ -11,6 +11,8 @@ export type ScenarioKind =
   | "uptrend"
   | "downtrend"
   | "ranging"
+  | "uptrend-reversal"
+  | "downtrend-reversal"
   | "support-bounce"
   | "resistance-rejection"
   | "breakout"
@@ -236,6 +238,56 @@ export function generateScenario({
             "Marked the latest lower high",
           ],
         },
+      }
+    }
+
+    case "uptrend-reversal": {
+      const pivots: Pivot[] = [
+        { index: 0, price: base, kind: "low" },
+        { index: 9, price: base + amp * 1.2, kind: "high" },
+        { index: 16, price: base + amp * 0.5, kind: "low" },
+        { index: 26, price: base + amp * 2.0, kind: "high" },
+        { index: 36, price: base + amp * 0.15, kind: "low" },
+        { index: length - 1, price: base + amp * 0.9, kind: "high" },
+      ]
+      const candles = candlesFromCloses(
+        closesFromPivots(pivots, length, rng),
+        rng
+      )
+      return {
+        candles,
+        annotations: [
+          swingAnnotation("sh1", "high", candles[26], "Higher high"),
+          swingAnnotation("sl-break", "low", candles[36], "Lower low — structure break"),
+        ],
+        tools: ["swing-high", "swing-low"],
+        defaultTask: "The uptrend just printed a lower low. What is the market attempting?",
+        expectedAnswer: { requiredMarkers: [], scoringRubric: [] },
+      }
+    }
+
+    case "downtrend-reversal": {
+      const pivots: Pivot[] = [
+        { index: 0, price: base + amp * 2.9, kind: "high" },
+        { index: 9, price: base + amp * 1.6, kind: "low" },
+        { index: 16, price: base + amp * 2.3, kind: "high" },
+        { index: 26, price: base + amp * 0.7, kind: "low" },
+        { index: 36, price: base + amp * 2.55, kind: "high" },
+        { index: length - 1, price: base + amp * 1.7, kind: "low" },
+      ]
+      const candles = candlesFromCloses(
+        closesFromPivots(pivots, length, rng),
+        rng
+      )
+      return {
+        candles,
+        annotations: [
+          swingAnnotation("sl1", "low", candles[26], "Lower low"),
+          swingAnnotation("sh-break", "high", candles[36], "Higher high — structure break"),
+        ],
+        tools: ["swing-high", "swing-low"],
+        defaultTask: "The downtrend just printed a higher high. What is the market attempting?",
+        expectedAnswer: { requiredMarkers: [], scoringRubric: [] },
       }
     }
 

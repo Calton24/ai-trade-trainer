@@ -1,4 +1,6 @@
 import { computeBehavioralCompetence } from "@/lib/competence/behavioral-scoring"
+import { computeSkillProfile, countChartsAnalysed } from "@/lib/skills/engine"
+import { computeExecutionStats } from "@/lib/user-state/execution-lab"
 import { computeAllLibraryBookStats } from "@/lib/user-state/library"
 import { levelFromXP } from "@/lib/progression/levels"
 import { getTierForXp } from "@/lib/progression/ranks"
@@ -40,6 +42,11 @@ interface AchievementContext {
   riskScore: number
   psychologyScore: number
   chartScore: number
+  chartsAnalysed: number
+  practiceStreak: number
+  marketReadingScore: number
+  executionAttempts: number
+  averageExecutionScore: number
 }
 
 function buildContext(state: UserState): AchievementContext {
@@ -59,6 +66,8 @@ function buildContext(state: UserState): AchievementContext {
   ).length
 
   const competence = computeBehavioralCompetence(state)
+  const skillProfile = computeSkillProfile(state)
+  const executionStats = computeExecutionStats(state)
 
   return {
     lessonsCompleted: state.lessonProgress.length,
@@ -80,6 +89,11 @@ function buildContext(state: UserState): AchievementContext {
     riskScore: competence.riskScore,
     psychologyScore: competence.psychologyScore,
     chartScore: competence.chartScore,
+    chartsAnalysed: countChartsAnalysed(state),
+    practiceStreak: state.progress.practiceStreak ?? 0,
+    marketReadingScore: skillProfile.marketReadingScore,
+    executionAttempts: executionStats.attempts,
+    averageExecutionScore: executionStats.averageScore,
   }
 }
 
@@ -291,6 +305,61 @@ export const ACHIEVEMENTS: Achievement[] = [
     bonusXp: 1000,
     category: "milestone",
     predicate: (c) => c.coursesCompleted >= 5,
+  },
+  {
+    id: "ach-100-charts",
+    name: "100 Charts Analysed",
+    description: "Analyse 100 charts through practice drills",
+    icon: "📈",
+    bonusXp: 200,
+    category: "milestone",
+    predicate: (c) => c.chartsAnalysed >= 100,
+  },
+  {
+    id: "ach-500-charts",
+    name: "500 Charts Analysed",
+    description: "Analyse 500 charts — serious deliberate practice",
+    icon: "🔭",
+    bonusXp: 500,
+    category: "mastery",
+    predicate: (c) => c.chartsAnalysed >= 500,
+  },
+  {
+    id: "ach-replay-master",
+    name: "Replay Master",
+    description: "Maintain a 7-day practice streak",
+    icon: "🔁",
+    bonusXp: 300,
+    category: "consistency",
+    predicate: (c) => c.practiceStreak >= 7,
+  },
+  {
+    id: "ach-market-reader",
+    name: "Market Reader",
+    description: "Reach 75%+ overall market reading score",
+    icon: "👁️",
+    bonusXp: 400,
+    category: "mastery",
+    predicate: (c) => c.marketReadingScore >= 75,
+  },
+  {
+    id: "ach-first-trade",
+    name: "First Trade",
+    description: "Complete your first simulated execution",
+    icon: "🎯",
+    bonusXp: 75,
+    category: "milestone",
+    predicate: (c) => c.executionAttempts >= 1,
+  },
+  {
+    id: "ach-execution-master",
+    name: "Execution Master",
+    description: "Maintain 80%+ average execution score over 10+ trades",
+    icon: "⚡",
+    bonusXp: 350,
+    category: "mastery",
+    predicate: (c) =>
+      c.executionAttempts >= 10 && c.averageExecutionScore >= 80,
   },
 ]
 

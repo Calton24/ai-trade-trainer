@@ -24,6 +24,7 @@ function scoreFromQuizAttempts(state: UserState): number {
 
 function scoreChartRecognition(state: UserState): number {
   const drillScores = state.drillSessions.map((d) => d.score)
+  const patternScores = state.patternAttempts.map((a) => a.score)
   const trendStats = computeTrendSpotterStats(state)
   const simScores = state.simulator.attempts
     .filter((a) => a.stageId === "chart-reading" || a.stageId === "support-resistance")
@@ -33,6 +34,7 @@ function scoreChartRecognition(state: UserState): number {
   )
   const components = [
     avg(drillScores),
+    avg(patternScores),
     trendStats.classificationAccuracy,
     avg(exerciseScores),
     avg(simScores),

@@ -15,7 +15,9 @@ function freshProgress() {
     level: 1,
     xp: 0,
     streak: 0,
+    practiceStreak: 0,
     lastActivityDate: null,
+    lastPracticeDate: null,
     activePathId: null,
     completedSyllabusItems: [] as string[],
     pathProgress: {} as Record<string, number>,
@@ -62,6 +64,9 @@ export function resetSection(
       liveTradingPhase: state.liveTradingPhase,
       simulator: getInitialSimulatorState(),
       gamification: getInitialGamificationState(),
+      patternAttempts: [],
+      dailyTraining: null,
+      executionAttempts: [],
     }
   }
 
@@ -94,6 +99,9 @@ export function resetSection(
         ...state,
         drillSessions: state.drillSessions.filter(
           (d) => !d.drillType.startsWith("chart")
+        ),
+        patternAttempts: state.patternAttempts.filter(
+          (a) => a.category === "support-resistance"
         ),
       }
     case "strategy-wiki":

@@ -18,6 +18,12 @@ import { WeeklyTargetWidget } from "@/components/habits/weekly-target-widget"
 import { AppShell } from "@/components/layout/app-shell"
 import { useUserState } from "@/components/providers/user-state-provider"
 import { CompetenceScoreCard } from "@/components/progression/competence-score-card"
+import { AdaptiveCoachCard } from "@/components/dashboard/adaptive-coach-card"
+import { DailyTrainingCard } from "@/components/dashboard/daily-training-card"
+import { MarketStructurePracticeCard } from "@/components/dashboard/market-structure-practice-card"
+import { WeeklyReportCard } from "@/components/dashboard/weekly-report-card"
+import { MarketReadingHero } from "@/components/skills/market-reading-hero"
+import { SkillTreePanel } from "@/components/skills/skill-tree-panel"
 import { TraderRoadmapWidget } from "@/components/simulator/trader-roadmap-widget"
 import { ReadinessScoreCard } from "@/components/trader-readiness/readiness-score-card"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -48,6 +54,10 @@ export function DashboardContent() {
     competenceScores,
     simulatorStats,
     progression,
+    skillProfile,
+    dailyTrainingPlan,
+    adaptiveRecommendations,
+    weeklyReport,
   } = useUserState()
   const rank = progression.rank
   const activePath = stats.activePathId
@@ -135,6 +145,19 @@ export function DashboardContent() {
             </div>
           </div>
         )}
+
+        <MarketReadingHero profile={skillProfile} />
+
+        <SkillTreePanel profile={skillProfile} />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <DailyTrainingCard plan={dailyTrainingPlan} />
+          <AdaptiveCoachCard recommendations={adaptiveRecommendations} />
+        </div>
+
+        <WeeklyReportCard report={weeklyReport} />
+
+        <MarketStructurePracticeCard />
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>

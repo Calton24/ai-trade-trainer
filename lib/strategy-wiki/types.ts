@@ -8,6 +8,7 @@ export type StrategyCategory =
   | "Day Trading"
   | "Structure"
   | "Professional Forex"
+  | "Market Behaviour"
 
 export type MasteryLevel =
   | "not_started"

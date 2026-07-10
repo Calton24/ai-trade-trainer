@@ -6,6 +6,8 @@ import type { StoredTraderReadinessState } from "@/lib/trader-readiness/types"
 import type { LivePhaseState } from "@/lib/competence/types"
 import { getDefaultPhaseState } from "@/lib/competence/live-trading-phases"
 import type { StoredSimulatorState } from "@/lib/simulator/types"
+import type { StoredPatternAttempt } from "./pattern-recognition"
+import type { StoredExecutionAttempt } from "@/lib/execution-lab/types"
 
 export interface StoredLessonProgress {
   lessonId: string
@@ -80,10 +82,20 @@ export interface StoredUserProgress {
   level: number
   xp: number
   streak: number
+  /** Consecutive days with deliberate practice (replays, drills, pattern widgets). */
+  practiceStreak: number
   lastActivityDate: string | null
+  lastPracticeDate: string | null
   activePathId: string | null
   completedSyllabusItems: string[]
   pathProgress: Record<string, number>
+}
+
+export interface StoredDailyTrainingState {
+  dateKey: string
+  completedItemIds: string[]
+  allComplete: boolean
+  bonusClaimed: boolean
 }
 
 export interface StoredGamificationState {
@@ -126,6 +138,7 @@ export type ActivityType =
   | "readiness-assessment-complete"
   | "readiness-pillar-complete"
   | "simulator-session-complete"
+  | "pattern-practice-complete"
 
 export type ActivitySource =
   | "paths"
@@ -230,6 +243,9 @@ export interface UserState {
   liveTradingPhase: LivePhaseState
   simulator: StoredSimulatorState
   gamification: StoredGamificationState
+  patternAttempts: StoredPatternAttempt[]
+  dailyTraining: StoredDailyTrainingState | null
+  executionAttempts: StoredExecutionAttempt[]
 }
 
 export const STORAGE_KEYS = {
@@ -261,4 +277,7 @@ export const STORAGE_KEYS = {
   progressArchives: "tradetrainer_progress_archives",
   simulator: "tradetrainer_simulator",
   gamification: "tradetrainer_gamification",
+  patternAttempts: "tradetrainer_pattern_attempts",
+  dailyTraining: "tradetrainer_daily_training",
+  executionAttempts: "tradetrainer_execution_attempts",
 } as const

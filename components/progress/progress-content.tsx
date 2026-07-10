@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { RotateCcwIcon, TrophyIcon } from "lucide-react"
 
+import { PatternRecognitionPanel } from "@/components/progress/pattern-recognition-panel"
 import { WeeklyTargetWidget } from "@/components/habits/weekly-target-widget"
 import { AppShell } from "@/components/layout/app-shell"
 import { useUserState } from "@/components/providers/user-state-provider"
@@ -24,6 +25,7 @@ export function ProgressContent() {
     flashcardStats,
     trendSpotterStats,
     strategyWikiStats,
+    patternRecognitionStats,
     globalSnapshot,
     reset,
   } = useUserState()
@@ -79,6 +81,10 @@ export function ProgressContent() {
           </div>
           <Progress value={xpPercent} className="mt-4 h-2" />
         </div>
+
+        {!isNewUser && (
+          <PatternRecognitionPanel stats={patternRecognitionStats} />
+        )}
 
         {!isNewUser && (
           <div className="grid gap-4 lg:grid-cols-2">

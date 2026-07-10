@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CheckCircle2Icon, RotateCcwIcon, XCircleIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -10,9 +10,11 @@ import type {
   SwingLabelerWidget,
   TrendBuilderWidget,
 } from "@/lib/course/widgets"
+import { categoryForContinuationAnswer } from "@/lib/user-state/pattern-recognition"
 import { cn } from "@/lib/utils"
 
 import { CHART_H, CHART_W, SwingChart, svgX, svgY } from "./swing-chart"
+import { usePatternAttemptRecorder } from "./use-pattern-attempt"
 
 const HIGH_LABELS: SwingLabel[] = ["HH", "LH"]
 const LOW_LABELS: SwingLabel[] = ["HL", "LL"]
@@ -22,7 +24,14 @@ const LOW_LABELS: SwingLabel[] = ["HL", "LL"]
  * The available labels are constrained by whether each point is a high or low
  * (you can't label a trough a "Higher High").
  */
-export function SwingLabeler({ widget }: { widget: SwingLabelerWidget }) {
+export function SwingLabeler({
+  widget,
+  lessonId,
+}: {
+  widget: SwingLabelerWidget
+  lessonId?: string
+}) {
+  const { record, resetSession } = usePatternAttemptRecorder(lessonId)
   const [labels, setLabels] = useState<Record<number, SwingLabel>>({})
   const [active, setActive] = useState<number | null>(null)
   const [checkedLabels, setCheckedLabels] = useState(false)
@@ -46,7 +55,20 @@ export function SwingLabeler({ widget }: { widget: SwingLabelerWidget }) {
     setActive(null)
     setCheckedLabels(false)
     setTrendPick(null)
+    resetSession()
   }
+
+  useEffect(() => {
+    if (trendPick === null) return
+    const labelCorrect = widget.points.filter((p, i) => labels[i] === p.label).length
+    const trendCorrect = trendPick === widget.trend ? 1 : 0
+    record({
+      category: "trend-detection",
+      widgetKind: "swing-labeler",
+      correct: labelCorrect + trendCorrect,
+      total: widget.points.length + 1,
+    })
+  }, [trendPick, labels, widget.points, widget.trend, record])
 
   return (
     <div className="rounded-xl border border-border/60 bg-card/50 p-5">
@@ -190,12 +212,25 @@ const DEFAULT_PREDICT_OPTIONS = [
 /** Continuation Predictor — the chart pauses; predict the next move. */
 export function ContinuationPredictor({
   widget,
+  lessonId,
 }: {
   widget: ContinuationPredictorWidget
+  lessonId?: string
 }) {
+  const { record, resetSession } = usePatternAttemptRecorder(lessonId)
   const [picked, setPicked] = useState<string | null>(null)
   const options = widget.options ?? DEFAULT_PREDICT_OPTIONS
   const isCorrect = picked === widget.correct
+
+  useEffect(() => {
+    if (!picked) return
+    record({
+      category: categoryForContinuationAnswer(widget.correct),
+      widgetKind: "continuation-predictor",
+      correct: isCorrect ? 1 : 0,
+      total: 1,
+    })
+  }, [picked, isCorrect, widget.correct, record])
 
   return (
     <div className="rounded-xl border border-border/60 bg-card/50 p-5">
@@ -252,7 +287,10 @@ export function ContinuationPredictor({
           size="sm"
           variant="outline"
           className="mt-4"
-          onClick={() => setPicked(null)}
+          onClick={() => {
+            setPicked(null)
+            resetSession()
+          }}
         >
           <RotateCcwIcon data-icon="inline-start" />
           Try again
@@ -266,7 +304,14 @@ export function ContinuationPredictor({
  * Trend Builder — tap the chart to place alternating swing points, then the
  * widget grades whether the pattern forms the requested trend.
  */
-export function TrendBuilder({ widget }: { widget: TrendBuilderWidget }) {
+export function TrendBuilder({
+  widget,
+  lessonId,
+}: {
+  widget: TrendBuilderWidget
+  lessonId?: string
+}) {
+  const { record, resetSession } = usePatternAttemptRecorder(lessonId)
   const [placed, setPlaced] = useState<{ x: number; y: number }[]>([])
   const [checked, setChecked] = useState(false)
 
@@ -299,7 +344,18 @@ export function TrendBuilder({ widget }: { widget: TrendBuilderWidget }) {
   const reset = () => {
     setPlaced([])
     setChecked(false)
+    resetSession()
   }
+
+  useEffect(() => {
+    if (!checked || !grade) return
+    record({
+      category: "trend-building",
+      widgetKind: "trend-builder",
+      correct: grade.ok ? 1 : 0,
+      total: 1,
+    })
+  }, [checked, grade, record])
 
   return (
     <div className="rounded-xl border border-border/60 bg-card/50 p-5">

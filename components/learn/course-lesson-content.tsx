@@ -153,7 +153,7 @@ export function CourseLessonContent({
       )}
 
       {lesson.contentBlocks.length > 0 && (
-        <LessonRenderer blocks={lesson.contentBlocks} />
+        <LessonRenderer blocks={lesson.contentBlocks} lessonId={lesson.id} />
       )}
 
       {lesson.lessonType === "reflection" && (

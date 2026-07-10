@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { type NextRequest, NextResponse } from "next/server"
 
+import { isAdminEmail, isAdminConfigured, isAdminPath } from "@/lib/admin/config"
 import { isProtectedPath, isAuthEntryPath } from "@/lib/auth/route-access"
 import { fetchActiveAdminGrant } from "@/lib/data/admin-grant-service"
 import { fetchUserSubscription } from "@/lib/data/subscription-service"
@@ -74,6 +75,22 @@ export async function updateSession(request: NextRequest) {
     url.search = ""
     url.searchParams.set("redirect", pathname)
     return NextResponse.redirect(url)
+  }
+
+  if (isAdminPath(pathname)) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/sign-in"
+      url.search = ""
+      url.searchParams.set("redirect", pathname)
+      return NextResponse.redirect(url)
+    }
+    if (!isAdminConfigured() || !isAdminEmail(user.email)) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/dashboard"
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
   }
 
   if (user && requiresProSubscription(pathname)) {

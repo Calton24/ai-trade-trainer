@@ -82,7 +82,9 @@ export function getInitialProgress(): StoredUserProgress {
     level: 1,
     xp: 0,
     streak: 0,
+    practiceStreak: 0,
     lastActivityDate: null,
+    lastPracticeDate: null,
     activePathId: null,
     completedSyllabusItems: [],
     pathProgress: {},
@@ -110,6 +112,125 @@ export function createEmptyUserState(): UserState {
     liveTradingPhase: getDefaultPhaseState(),
     simulator: getInitialSimulatorState(),
     gamification: getInitialGamificationState(),
+    patternAttempts: [],
+    dailyTraining: null,
+    executionAttempts: [],
+  }
+}
+
+/** Ensure persisted/cloud snapshots always include fields added in later releases. */
+function coalesceArray<T>(value: T[] | undefined | null, fallback: T[]): T[] {
+  return Array.isArray(value) ? value : fallback
+}
+
+export function normalizeUserState(
+  partial: Partial<UserState> | null | undefined
+): UserState {
+  const base = createEmptyUserState()
+  if (!partial) return base
+
+  const bookLabPartial = partial.bookLab
+  const trendSpotterPartial = partial.trendSpotter
+  const strategyWikiPartial = partial.strategyWiki
+  const simulatorPartial = partial.simulator
+
+  return {
+    ...base,
+    ...partial,
+    progress: {
+      ...base.progress,
+      ...(partial.progress ?? {}),
+      practiceStreak:
+        partial.progress?.practiceStreak ?? base.progress.practiceStreak,
+      lastPracticeDate:
+        partial.progress?.lastPracticeDate ?? base.progress.lastPracticeDate,
+    },
+    lessonProgress: coalesceArray(partial.lessonProgress, base.lessonProgress),
+    quizAttempts: coalesceArray(partial.quizAttempts, base.quizAttempts),
+    drillSessions: coalesceArray(partial.drillSessions, base.drillSessions),
+    journalEntries: coalesceArray(partial.journalEntries, base.journalEntries),
+    earnedBadgeIds: coalesceArray(partial.earnedBadgeIds, base.earnedBadgeIds),
+    bookLab: {
+      ...base.bookLab,
+      ...bookLabPartial,
+      completedConceptIds: coalesceArray(
+        bookLabPartial?.completedConceptIds,
+        base.bookLab.completedConceptIds
+      ),
+      quizAttempts: coalesceArray(
+        bookLabPartial?.quizAttempts,
+        base.bookLab.quizAttempts
+      ),
+      practiceDrills: coalesceArray(
+        bookLabPartial?.practiceDrills,
+        base.bookLab.practiceDrills
+      ),
+      reflections: coalesceArray(
+        bookLabPartial?.reflections,
+        base.bookLab.reflections
+      ),
+    },
+    activityLog: coalesceArray(partial.activityLog, base.activityLog),
+    weeklyTarget: { ...base.weeklyTarget, ...(partial.weeklyTarget ?? {}) },
+    weeklyStreak: { ...base.weeklyStreak, ...(partial.weeklyStreak ?? {}) },
+    flashcards: { ...base.flashcards, ...(partial.flashcards ?? {}) },
+    trendSpotter: {
+      ...base.trendSpotter,
+      ...trendSpotterPartial,
+      completedLessonIds: coalesceArray(
+        trendSpotterPartial?.completedLessonIds,
+        base.trendSpotter.completedLessonIds
+      ),
+      exerciseAttempts: coalesceArray(
+        trendSpotterPartial?.exerciseAttempts,
+        base.trendSpotter.exerciseAttempts
+      ),
+      challengeAttempts: coalesceArray(
+        trendSpotterPartial?.challengeAttempts,
+        base.trendSpotter.challengeAttempts
+      ),
+    },
+    strategyWiki: {
+      ...base.strategyWiki,
+      ...strategyWikiPartial,
+      practiceAttempts: coalesceArray(
+        strategyWikiPartial?.practiceAttempts,
+        base.strategyWiki.practiceAttempts
+      ),
+      challengeAttempts: coalesceArray(
+        strategyWikiPartial?.challengeAttempts,
+        base.strategyWiki.challengeAttempts
+      ),
+    },
+    learningMap: { ...base.learningMap, ...(partial.learningMap ?? {}) },
+    traderReadiness: {
+      ...base.traderReadiness,
+      ...(partial.traderReadiness ?? {}),
+    },
+    liveTradingPhase: {
+      ...base.liveTradingPhase,
+      ...(partial.liveTradingPhase ?? {}),
+    },
+    simulator: {
+      ...base.simulator,
+      ...simulatorPartial,
+      completedStageIds: coalesceArray(
+        simulatorPartial?.completedStageIds,
+        base.simulator.completedStageIds
+      ),
+      unlockedStageIds: coalesceArray(
+        simulatorPartial?.unlockedStageIds,
+        base.simulator.unlockedStageIds
+      ),
+      attempts: coalesceArray(simulatorPartial?.attempts, base.simulator.attempts),
+    },
+    gamification: { ...base.gamification, ...(partial.gamification ?? {}) },
+    patternAttempts: coalesceArray(partial.patternAttempts, base.patternAttempts),
+    dailyTraining: partial.dailyTraining ?? base.dailyTraining,
+    executionAttempts: coalesceArray(
+      partial.executionAttempts,
+      base.executionAttempts
+    ),
   }
 }
 
@@ -129,7 +250,7 @@ function writeJson<T>(key: string, value: T) {
 }
 
 export function loadUserState(): UserState {
-  return {
+  return normalizeUserState({
     progress: readJson(STORAGE_KEYS.progress, getInitialProgress()),
     lessonProgress: readJson<StoredLessonProgress[]>(
       STORAGE_KEYS.lessonProgress,
@@ -172,7 +293,10 @@ export function loadUserState(): UserState {
       STORAGE_KEYS.gamification,
       getInitialGamificationState()
     ),
-  }
+    patternAttempts: readJson(STORAGE_KEYS.patternAttempts, []),
+    dailyTraining: readJson(STORAGE_KEYS.dailyTraining, null),
+    executionAttempts: readJson(STORAGE_KEYS.executionAttempts, []),
+  })
 }
 
 export function saveUserState(state: UserState) {
@@ -205,6 +329,9 @@ export function saveUserState(state: UserState) {
   writeJson(STORAGE_KEYS.liveTradingPhase, state.liveTradingPhase)
   writeJson(STORAGE_KEYS.simulator, state.simulator)
   writeJson(STORAGE_KEYS.gamification, state.gamification)
+  writeJson(STORAGE_KEYS.patternAttempts, state.patternAttempts)
+  writeJson(STORAGE_KEYS.dailyTraining, state.dailyTraining)
+  writeJson(STORAGE_KEYS.executionAttempts, state.executionAttempts)
 }
 
 export function resetUserProgress() {
@@ -771,3 +898,45 @@ export {
 export { resetSection, type ResetSection } from "./reset"
 
 export type { MotivationEvent, ActivityLogItem } from "./types"
+
+export {
+  recordPatternAttempt,
+  computePatternRecognitionStats,
+  getPatternCategoryLabel,
+  categoryForContinuationAnswer,
+  type PatternCategory,
+  type PatternRecognitionStats,
+  type StoredPatternAttempt,
+} from "./pattern-recognition"
+
+export {
+  computeSkillProfile,
+  getDailyTrainingPlan,
+  getAdaptiveRecommendations,
+  getSkillDailyChallenge,
+  getPracticeDrillsFiltered,
+  countChartsAnalysed,
+  PRACTICE_DRILLS,
+} from "@/lib/skills"
+export type {
+  SkillProfile,
+  DailyTrainingPlan,
+  AdaptiveRecommendation,
+  DailyChallenge,
+  WeeklyReport,
+  JournalInsight,
+} from "@/lib/skills"
+export {
+  computeWeeklyReport,
+  analyzeJournal,
+} from "@/lib/skills"
+export {
+  recordExecutionAttempt,
+  computeExecutionStats,
+} from "./execution-lab"
+export {
+  bumpPracticeStreak,
+  completeDailyTrainingItem,
+  claimDailyTrainingBonus,
+  calculatePracticeStreak,
+} from "@/lib/skills/practice-streak"

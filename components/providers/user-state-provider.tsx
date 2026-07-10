@@ -39,6 +39,19 @@ import {
   computeSimulatorStats,
   recordSimulatorAttempt,
   isSimulatorStageUnlocked,
+  recordPatternAttempt as savePatternAttempt,
+  computePatternRecognitionStats,
+  computeSkillProfile,
+  getDailyTrainingPlan,
+  getAdaptiveRecommendations,
+  getSkillDailyChallenge,
+  computeWeeklyReport,
+  analyzeJournal,
+  bumpPracticeStreak,
+  completeDailyTrainingItem as markDailyTrainingItem,
+  claimDailyTrainingBonus as claimDailyBonus,
+  recordExecutionAttempt as saveExecutionAttempt,
+  computeExecutionStats,
   recordReadinessAssessment as saveReadinessAssessment,
   completeFlashcardSession,
   completeStrategyLesson,
@@ -59,6 +72,7 @@ import {
   isTrendLessonCompleted,
   createEmptyUserState,
   loadUserState,
+  normalizeUserState,
   recordBookPracticeDrill,
   recordBookQuizAttempt,
   recordChartLabComplete,
@@ -127,6 +141,17 @@ import type { TrendSpotterStats } from "@/lib/trend-spotter/types"
 import type { TrendClassification } from "@/lib/trend-spotter/types"
 import type { LearningMapStats, LockInfo, AccessLevel } from "@/lib/learning-map/types"
 import type { StrategyWikiStats } from "@/lib/strategy-wiki/types"
+import type { PatternRecognitionStats } from "@/lib/user-state/pattern-recognition"
+import type { StoredPatternAttempt } from "@/lib/user-state/pattern-recognition"
+import type {
+  AdaptiveRecommendation,
+  DailyChallenge,
+  DailyTrainingPlan,
+  JournalInsight,
+  SkillProfile,
+  WeeklyReport,
+} from "@/lib/skills/types"
+import type { ExecutionLabStats, StoredExecutionAttempt } from "@/lib/execution-lab/types"
 import type { SimulatorStats, SimulatorSessionAttempt } from "@/lib/simulator/types"
 import type { TraderReadinessStats } from "@/lib/trader-readiness/types"
 
@@ -153,6 +178,22 @@ interface UserStateContextValue {
     session: Omit<StoredDrillSession, "id" | "completedAt">,
     lessonId?: string
   ) => void
+  recordPatternAttempt: (
+    attempt: Omit<StoredPatternAttempt, "id" | "completedAt">
+  ) => void
+  patternRecognitionStats: PatternRecognitionStats
+  skillProfile: SkillProfile
+  dailyTrainingPlan: DailyTrainingPlan
+  adaptiveRecommendations: AdaptiveRecommendation[]
+  dailyChallenge: DailyChallenge
+  weeklyReport: WeeklyReport
+  journalInsights: JournalInsight[]
+  completeDailyTrainingItem: (itemId: string) => void
+  claimDailyTrainingBonus: () => void
+  recordExecutionAttempt: (
+    attempt: Omit<StoredExecutionAttempt, "id" | "completedAt">
+  ) => void
+  executionStats: ExecutionLabStats
   addJournalEntry: (entry: Omit<JournalEntry, "id" | "createdAt">) => void
   isLessonDone: (lessonId: string) => boolean
   isLessonUnlocked: (lessonId: string, pathLocked: boolean) => boolean
@@ -291,7 +332,7 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
 
       setSyncStatus("syncing")
       const remote = await fetchLearningState(supabase, user!.id)
-      const next = remote ?? createEmptyUserState()
+      const next = remote ? normalizeUserState(remote) : createEmptyUserState()
 
       if (!cancelled) {
         setState(next)
@@ -467,6 +508,14 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
     const traderReadinessStats = computeTraderReadinessStats(state)
     const competenceScores = computeBehavioralCompetence(state)
     const simulatorStats = computeSimulatorStats(state)
+    const patternRecognitionStats = computePatternRecognitionStats(state)
+    const skillProfile = computeSkillProfile(state)
+    const dailyTrainingPlan = getDailyTrainingPlan(state)
+    const adaptiveRecommendations = getAdaptiveRecommendations(state)
+    const dailyChallenge = getSkillDailyChallenge(state)
+    const weeklyReport = computeWeeklyReport(state)
+    const journalInsights = analyzeJournal(state)
+    const executionStats = computeExecutionStats(state)
     const progression = getProgressionSnapshot(state)
     const displayName = profile?.name ?? "You"
 
@@ -491,6 +540,14 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
       learningMapStats,
       traderReadinessStats,
       competenceScores,
+      patternRecognitionStats,
+      skillProfile,
+      dailyTrainingPlan,
+      adaptiveRecommendations,
+      dailyChallenge,
+      weeklyReport,
+      journalInsights,
+      executionStats,
       syncStatus,
       reset,
       resetSectionProgress,
@@ -522,6 +579,28 @@ export function UserStateProvider({ children }: { children: React.ReactNode }) {
       },
       recordDrillSession: (session, lessonId) =>
         persistLearning(saveDrillSession(state, session, lessonId)),
+      recordPatternAttempt: (attempt) => {
+        let next = savePatternAttempt(state, attempt)
+        next = bumpPracticeStreak(next)
+        const withXp = awardXP(next, 10)
+        persistLearning(withXp)
+      },
+      completeDailyTrainingItem: (itemId) => {
+        persist(markDailyTrainingItem(state, itemId))
+      },
+      claimDailyTrainingBonus: () => {
+        const next = claimDailyBonus(state)
+        if (next.dailyTraining?.bonusClaimed && !state.dailyTraining?.bonusClaimed) {
+          persistLearning(awardXP(next, next.dailyTraining ? 100 : 0))
+        } else {
+          persist(next)
+        }
+      },
+      recordExecutionAttempt: (attempt) => {
+        let next = saveExecutionAttempt(state, attempt)
+        next = bumpPracticeStreak(next)
+        persistLearning(awardXP(next, Math.round(attempt.executionScore / 5)))
+      },
       addJournalEntry: (entry) =>
         persistLearning(createJournalEntry(state, entry)),
       isLessonDone: (lessonId) => isLessonCompleted(state, lessonId),

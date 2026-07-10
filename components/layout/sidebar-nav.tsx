@@ -10,6 +10,7 @@ import {
   LibraryBigIcon,
   CandlestickChartIcon,
   ClipboardListIcon,
+  CrosshairIcon,
   CreditCardIcon,
   GraduationCapIcon,
   LayersIcon,
@@ -57,6 +58,8 @@ const navSections: { title: string; items: NavItem[] }[] = [
   {
     title: "Practice",
     items: [
+      { href: "/practice", label: "Practice Hub", icon: TargetIcon },
+      { href: "/execution-lab", label: "Execution Lab", icon: CrosshairIcon },
       { href: "/chart-lab", label: "Chart Lab", icon: CandlestickChartIcon },
       { href: "/trend-spotter", label: "Trend Spotter", icon: TrendingUpIcon },
       { href: "/strategy-wiki", label: "Strategy Wiki", icon: ClipboardListIcon },
@@ -66,6 +69,7 @@ const navSections: { title: string; items: NavItem[] }[] = [
     title: "Simulation",
     items: [
       { href: "/simulator", label: "Trading Simulator", icon: LineChartIcon },
+      { href: "/career", label: "Funded Trader Journey", icon: TrophyIcon },
       { href: "/journal", label: "Trade Journal", icon: BookOpenIcon },
       { href: "/simulator/performance", label: "Performance", icon: BarChart3Icon },
     ],
@@ -121,12 +125,14 @@ const MOBILE_TABS = [
       ]),
   },
   {
-    href: "/chart-lab",
+    href: "/practice",
     label: "Practice",
     icon: CandlestickChartIcon,
     isActive: (pathname: string) => {
       if (pathname.startsWith("/simulator/performance")) return false
       return matchesPrefix(pathname, [
+        "/practice",
+        "/execution-lab",
         "/chart-lab",
         "/trend-spotter",
         "/strategy-wiki",

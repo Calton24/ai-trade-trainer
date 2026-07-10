@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils"
 interface LessonRendererProps {
   blocks: ContentBlock[]
   showChart?: boolean
+  lessonId?: string
 }
 
 function ChecklistBlock({ block }: { block: ContentBlock }) {
@@ -78,7 +79,11 @@ function CalloutBlock({ block }: { block: ContentBlock }) {
   )
 }
 
-export function LessonRenderer({ blocks, showChart = true }: LessonRendererProps) {
+export function LessonRenderer({
+  blocks,
+  showChart = true,
+  lessonId,
+}: LessonRendererProps) {
   const chartBlocks = blocks.filter((b) => b.type === "chart-example")
   const chartCandles = generateMockCandles(35)
 
@@ -178,7 +183,11 @@ export function LessonRenderer({ blocks, showChart = true }: LessonRendererProps
             )
           case "interactive-widget":
             return block.widget ? (
-              <LessonWidgetRenderer key={block.id} widget={block.widget} />
+              <LessonWidgetRenderer
+                key={block.id}
+                widget={block.widget}
+                lessonId={lessonId}
+              />
             ) : null
           case "chart-demo":
           case "chart-lab":

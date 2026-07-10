@@ -21,9 +21,21 @@ import {
   eodReversalStrategy,
   momentumBounceStrategy,
 } from "./professional-forex-strategies"
+import {
+  continuationConfirmationStrategy,
+  eodReversalBehaviourStrategy,
+  falseReversalFilterStrategy,
+  intradayReversalStrategy,
+  trendContinuationBehaviourStrategy,
+} from "./market-behaviour-strategies"
 import type { StrategyCategory, TradingStrategy } from "@/lib/strategy-wiki/types"
 
 export const ALL_STRATEGIES: TradingStrategy[] = [
+  intradayReversalStrategy,
+  eodReversalBehaviourStrategy,
+  trendContinuationBehaviourStrategy,
+  falseReversalFilterStrategy,
+  continuationConfirmationStrategy,
   breakRetestStrategy,
   supportBounceStrategy,
   resistanceRejectionStrategy,
@@ -44,6 +56,7 @@ export const ALL_STRATEGIES: TradingStrategy[] = [
 ]
 
 export const STRATEGY_CATEGORIES: StrategyCategory[] = [
+  "Market Behaviour",
   "Price Action",
   "Trend Following",
   "Momentum",

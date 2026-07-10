@@ -42,6 +42,9 @@ export const FREE_AUTHENTICATED_PREFIXES = [
   "/profile",
   "/training",
   "/learning-map",
+  "/practice",
+  "/execution-lab",
+  "/career",
 ] as const
 
 /**

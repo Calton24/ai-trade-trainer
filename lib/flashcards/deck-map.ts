@@ -1,4 +1,5 @@
 const PATH_TO_DECK: Record<string, string> = {
+  "market-behaviour-academy": "reversal-academy",
   "trading-foundations": "trading-basics",
   "price-action": "market-structure",
   "market-structure-mastery": "market-structure-mastery",
