@@ -14,6 +14,13 @@ import {
   reversalStrategy,
   vwapBounceStrategy,
 } from "./intermediate-strategies"
+import {
+  advancedReversalSwingStrategy,
+  bollyBreakoutBandStrategy,
+  eodContinuationStrategy,
+  eodReversalStrategy,
+  momentumBounceStrategy,
+} from "./professional-forex-strategies"
 import type { StrategyCategory, TradingStrategy } from "@/lib/strategy-wiki/types"
 
 export const ALL_STRATEGIES: TradingStrategy[] = [
@@ -29,6 +36,11 @@ export const ALL_STRATEGIES: TradingStrategy[] = [
   iccStrategy,
   movingAverageTrendStrategy,
   highOfDayBreakoutStrategy,
+  eodContinuationStrategy,
+  eodReversalStrategy,
+  momentumBounceStrategy,
+  advancedReversalSwingStrategy,
+  bollyBreakoutBandStrategy,
 ]
 
 export const STRATEGY_CATEGORIES: StrategyCategory[] = [
@@ -38,6 +50,7 @@ export const STRATEGY_CATEGORIES: StrategyCategory[] = [
   "Reversal",
   "Day Trading",
   "Structure",
+  "Professional Forex",
 ]
 
 export function getStrategyBySlug(slug: string): TradingStrategy | undefined {
@@ -71,4 +84,9 @@ export {
   iccStrategy,
   movingAverageTrendStrategy,
   highOfDayBreakoutStrategy,
+  eodContinuationStrategy,
+  eodReversalStrategy,
+  momentumBounceStrategy,
+  advancedReversalSwingStrategy,
+  bollyBreakoutBandStrategy,
 }

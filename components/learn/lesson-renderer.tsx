@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { ChartLab } from "@/components/chart-lab/chart-lab"
+import { LessonWidgetRenderer } from "@/components/learn/widgets"
 import { TrainingChart } from "@/components/training/training-chart"
 import { generateMockCandles } from "@/lib/mock-data"
 import type { ContentBlock } from "@/lib/course/types"
@@ -175,6 +176,10 @@ export function LessonRenderer({ blocks, showChart = true }: LessonRendererProps
                 )}
               </div>
             )
+          case "interactive-widget":
+            return block.widget ? (
+              <LessonWidgetRenderer key={block.id} widget={block.widget} />
+            ) : null
           case "chart-demo":
           case "chart-lab":
           case "interactive-chart-question":

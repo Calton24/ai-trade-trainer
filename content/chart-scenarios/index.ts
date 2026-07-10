@@ -301,6 +301,75 @@ const SCENARIO_META: ScenarioMeta[] = [
     hints: ["Mark the range high before the breakout candle."],
   },
 
+  // ---- Professional Forex track (Stages 13–17) ----
+  // TODO: The chart engine renders structural candles only. Once EMA/indicator
+  // overlays are supported, upgrade these scenarios to draw EMA 20/50/200
+  // (and Bollinger Bands) instead of teaching via equivalent structural zones.
+  {
+    id: "demo-phase1-phase2",
+    kind: "icc-bullish",
+    seed: "phase1-phase2-demo",
+    title: "Phase 1 vs Phase 2",
+    description:
+      "The impulsive trend leg (Phase 1), the corrective pullback (Phase 2), and the resumption.",
+    concept: "icc-continuation",
+    difficulty: "advanced",
+    explanation:
+      "The strong push is Phase 1 — the real trend direction. The slower drift back into the zone is Phase 2 — the pullback you never trade. The entry only exists when Phase 1 resumes out of the zone.",
+    hints: [
+      "Phase 1 candles are large and decisive; Phase 2 candles are smaller and overlapping.",
+      "Professionals plan during Phase 2 and act when Phase 1 resumes.",
+    ],
+  },
+  {
+    id: "demo-pullback-support",
+    kind: "support-bounce",
+    seed: "pf-pullback-demo",
+    title: "Pullback into the dynamic zone",
+    description:
+      "Price returns to a defended zone and continues — where a rising EMA 20/50 would sit on a live chart.",
+    concept: "support",
+    difficulty: "advanced",
+    explanation:
+      "Trending markets repeatedly pull back to the same dynamic area before continuing. On a live chart the rising EMA 20/50 typically overlaps this zone — the bounce is the same behaviour with a moving level.",
+    hints: ["The zone that produced the previous bounces is the one to watch."],
+  },
+  {
+    id: "task-four-point-trend",
+    kind: "uptrend",
+    seed: "pf-four-point",
+    title: "Confirm the four-point trend",
+    description: "Mark the most recent higher low that completes the confirmation.",
+    concept: "trend",
+    interactive: true,
+    tools: ["swing-low"],
+    task: "This uptrend needs four agreeing swing points (HH/HL/HH/HL). Mark the most recent higher low — the fourth point that keeps the structure intact.",
+    difficulty: "advanced",
+    explanation:
+      "Four consecutive agreeing swing points confirm a trend: the market has committed to a direction twice in a row. The most recent higher low is also your immediate low — the trend's heartbeat.",
+    hints: [
+      "Find the valley that sits higher than the previous valley.",
+      "That same point is the immediate low: if it breaks, the structure breaks.",
+    ],
+  },
+  {
+    id: "task-pullback-continuation",
+    kind: "icc-bullish",
+    seed: "pf-pullback-entry",
+    title: "Trade the Phase 1 resumption",
+    description: "Place entry, stop, and target for the continuation after the pullback.",
+    concept: "icc-continuation",
+    interactive: true,
+    tools: ["entry", "stop-loss", "take-profit"],
+    difficulty: "advanced",
+    explanation:
+      "The pullback (Phase 2) ends at the zone and Phase 1 resumes. Entry sits in the zone, stop below it — where the continuation is proven wrong — and target beyond the prior high.",
+    hints: [
+      "Entry belongs inside the pullback zone, not above it.",
+      "Stop below the zone; target beyond the last Phase 1 high.",
+    ],
+  },
+
   // ---- Interactive lab tasks ----
   {
     id: "task-mark-swing-high",

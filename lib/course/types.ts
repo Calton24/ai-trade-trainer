@@ -1,3 +1,5 @@
+import type { LessonWidget } from "./widgets"
+
 export type CourseLevel = "beginner" | "intermediate" | "advanced"
 
 export type PathStatus = "available" | "preview" | "coming_soon"
@@ -22,6 +24,7 @@ export type ContentBlockType =
   | "chart-lab"
   | "interactive-chart-question"
   | "interactive-question"
+  | "interactive-widget"
   | "summary"
   | "safety-note"
 
@@ -46,6 +49,8 @@ export interface ContentBlock {
   metadata?: Record<string, string | string[]>
   /** For chart-demo / chart-lab / interactive-chart-question blocks. */
   scenarioId?: string
+  /** For interactive-widget blocks. */
+  widget?: LessonWidget
   estimatedReadTime?: number
 }
 

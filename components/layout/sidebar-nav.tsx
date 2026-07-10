@@ -193,8 +193,8 @@ export function SidebarNav() {
 
   return (
     <>
-      {/* Desktop sidebar — unchanged full nav */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border/60 bg-card/50 backdrop-blur-xl lg:flex">
+      {/* Desktop sidebar — fixed, solid bg avoids per-frame compositor cost */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border/60 bg-card/95 lg:flex">
         <div className="flex h-16 items-center gap-2.5 border-b border-border/60 px-6">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
             <BrandMark className="size-5" />
@@ -251,8 +251,7 @@ export function SidebarNav() {
         <div
           className={cn(
             "mx-auto flex max-w-lg items-stretch gap-0.5 rounded-2xl border border-white/10",
-            "bg-card/55 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-2xl",
-            "supports-[backdrop-filter]:bg-card/40"
+            "bg-card/95 shadow-[0_8px_32px_rgba(0,0,0,0.45)]"
           )}
         >
           {MOBILE_TABS.map((tab) => {

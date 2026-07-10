@@ -21,11 +21,16 @@ const navLinks = [
 export function AppHeader({ variant = "marketing" }: AppHeaderProps) {
   return (
     <header className={cn("sticky top-0 z-50", variant === "app" && "lg:pl-64")}>
+      {/*
+        Performance: sticky + backdrop-blur-2xl forces the browser to
+        re-sample and blur the scrolling content on every frame → scroll jank.
+        A near-opaque solid background is visually identical in this dark theme
+        and eliminates the per-frame compositing cost entirely.
+      */}
       <div
         className={cn(
           "border-b border-white/10",
-          "bg-zinc-900/45 backdrop-blur-2xl backdrop-saturate-150",
-          "supports-[backdrop-filter]:bg-zinc-950/35",
+          "bg-zinc-950/92",
           "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
         )}
       >

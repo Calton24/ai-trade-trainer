@@ -45,6 +45,7 @@ export function calculateBlockTime(block: ContentBlock): number {
   switch (block.type) {
     case "checklist":
     case "interactive-question":
+    case "interactive-widget":
       return INTERACTIVE_MINUTES
     case "chart-example":
       return 2

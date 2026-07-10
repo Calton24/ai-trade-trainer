@@ -28,6 +28,14 @@ const INTERMEDIATE_STRATEGY_SLUGS = new Set([
   "high-of-day-breakout",
 ])
 
+const PROFESSIONAL_STRATEGY_SLUGS = new Set([
+  "eod-continuation",
+  "eod-reversal",
+  "momentum-bounce",
+  "advanced-reversal-swing",
+  "bolly-breakout-band",
+])
+
 export function getStrategyOverviewNodeId(slug: string): string | null {
   if (STRATEGY_NODE_BY_SLUG[slug]) return STRATEGY_NODE_BY_SLUG[slug]
   if (INTERMEDIATE_STRATEGY_SLUGS.has(slug)) return null
@@ -49,6 +57,7 @@ export function getStrategyPracticeFeatureId(slug: string): string | null {
   if (slug === "break-retest") return "feature-strategy-break-retest"
   if (STRATEGY_NODE_BY_SLUG[slug]) return "feature-strategy-sr"
   if (INTERMEDIATE_STRATEGY_SLUGS.has(slug)) return "feature-strategy-intermediate"
+  if (PROFESSIONAL_STRATEGY_SLUGS.has(slug)) return "feature-strategy-professional"
   return "feature-strategy-wiki-practice"
 }
 

@@ -5,6 +5,7 @@ import { chartCards } from "@/content/flashcards/chart-cards"
 import { forexBasicsCards } from "@/content/flashcards/forex-basics"
 import { iccCards } from "@/content/flashcards/icc"
 import { marketStructureCards } from "@/content/flashcards/market-structure"
+import { professionalForexCards } from "@/content/flashcards/professional-forex"
 import { psychologyCards } from "@/content/flashcards/psychology"
 import { riskManagementCards } from "@/content/flashcards/risk-management"
 import { supportResistanceCards } from "@/content/flashcards/support-resistance"
@@ -109,6 +110,14 @@ export const FLASHCARD_DECK_DEFS: Omit<FlashcardDeck, "cardIds">[] = [
     category: "Chart Lab",
     difficulty: "intermediate",
   },
+  {
+    id: "deck-professional-forex",
+    slug: "professional-forex",
+    title: "Professional Forex Workflow",
+    description: "Context, positioning, strategy selection, and the daily operating system.",
+    category: "Professional Forex",
+    difficulty: "advanced",
+  },
 ]
 
 export const ALL_FLASHCARD_ARRAYS = [
@@ -124,6 +133,7 @@ export const ALL_FLASHCARD_ARRAYS = [
   psychologyCards,
   trendSpotterCards,
   chartCards,
+  professionalForexCards,
 ]
 
 export const DECK_SLUG_TO_CARDS: Record<string, typeof tradingBasicsCards> = {
@@ -139,4 +149,5 @@ export const DECK_SLUG_TO_CARDS: Record<string, typeof tradingBasicsCards> = {
   psychology: psychologyCards,
   "trend-spotter": trendSpotterCards,
   "chart-cards": chartCards,
+  "professional-forex": professionalForexCards,
 }

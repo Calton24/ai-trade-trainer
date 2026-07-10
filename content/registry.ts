@@ -1,14 +1,18 @@
+import { entryStopTargetDrill } from "@/content/drills/entry-stop-target"
 import { spotTheTrendDrill } from "@/content/drills/spot-the-trend"
-import {
-  forexBasicsPath,
-  riskManagementPath,
-  tradingPsychologyPath,
-} from "@/content/paths/preview-paths"
+import { forexBasicsPath } from "@/content/paths/forex-basics"
 import { iccStrategyPath } from "@/content/paths/icc-strategy"
 import { priceActionPath } from "@/content/paths/price-action"
+import { professionalForexPath } from "@/content/paths/professional-forex"
+import { riskManagementPath } from "@/content/paths/risk-management"
 import { tradingFoundationsPath } from "@/content/paths/trading-foundations"
+import { tradingPsychologyPath } from "@/content/paths/trading-psychology"
+import { FOREX_BASICS_QUIZZES } from "@/content/quizzes/forex-basics-checks"
 import { iccCheckQuiz } from "@/content/quizzes/icc-check"
 import { priceActionLevelsCheckQuiz } from "@/content/quizzes/price-action-check"
+import { PROFESSIONAL_FOREX_QUIZZES } from "@/content/quizzes/professional-forex-checks"
+import { RISK_MANAGEMENT_QUIZZES } from "@/content/quizzes/risk-management-checks"
+import { TRADING_PSYCHOLOGY_QUIZZES } from "@/content/quizzes/trading-psychology-checks"
 import {
   candlestickBasicsQuiz,
   tradingBasicsCheckQuiz,
@@ -40,6 +44,7 @@ const RAW_PATHS = [
   iccStrategyPath,
   riskManagementPath,
   tradingPsychologyPath,
+  professionalForexPath,
 ]
 
 const RAW_QUIZZES: CourseQuiz[] = [
@@ -47,9 +52,13 @@ const RAW_QUIZZES: CourseQuiz[] = [
   candlestickBasicsQuiz,
   priceActionLevelsCheckQuiz,
   iccCheckQuiz,
+  ...FOREX_BASICS_QUIZZES,
+  ...RISK_MANAGEMENT_QUIZZES,
+  ...TRADING_PSYCHOLOGY_QUIZZES,
+  ...PROFESSIONAL_FOREX_QUIZZES,
 ]
 
-const RAW_DRILLS: ChartDrill[] = [spotTheTrendDrill]
+const RAW_DRILLS: ChartDrill[] = [spotTheTrendDrill, entryStopTargetDrill]
 
 function enrichLesson(
   lesson: CourseLesson,

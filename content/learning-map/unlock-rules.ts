@@ -137,6 +137,18 @@ export const FEATURE_UNLOCK_RULES: FeatureUnlockRule[] = [
     lockedMessage: "Complete intermediate mastery challenges to unlock full exploration.",
     href: "/learning-map",
   },
+  {
+    id: "feature-strategy-professional",
+    title: "Professional Forex Strategies",
+    requiredNodeIds: ["node-lesson-strategy-selection"],
+    previewNodeIds: ["node-quiz-positioning"],
+    reason:
+      "Professional playbooks unlock once you learn framework selection in the Professional Forex track.",
+    lockedMessage:
+      "Complete Strategy Selection (Stage 15) in the Professional Forex track before these playbooks.",
+    href: "/strategy-wiki",
+    previewHref: "/strategy-wiki",
+  },
 ]
 
 export const FEATURE_BY_ID = Object.fromEntries(

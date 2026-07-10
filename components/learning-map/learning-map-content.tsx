@@ -33,10 +33,10 @@ import {
 } from "@/lib/learning-map/unlocks"
 import type { LearningStage, StageProgress } from "@/lib/learning-map/types"
 import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
+import { memo, useEffect, useMemo, useState } from "react"
 import { shouldCelebrateFoundation } from "@/lib/user-state"
 
-function StageNode({
+const StageNode = memo(function StageNode({
   stage,
   progress,
   isCurrent,
@@ -196,12 +196,30 @@ function StageNode({
       <div className="flex-1 pb-8">{CardInner}</div>
     </div>
   )
-}
+})
 
 export function LearningMapContent() {
   const { state, learningMapStats, celebrateFoundation } = useUserState()
-  const stageProgress = getAllStageProgress(state)
-  const currentStageId = getCurrentStageId(state)
+
+  // Memoize expensive O(stages × nodes) computations — only re-run when
+  // `state` actually changes, not on every React re-render.
+  const stageProgress = useMemo(() => getAllStageProgress(state), [state])
+  const currentStageId = useMemo(() => getCurrentStageId(state), [state])
+  const explorationUnlocked = useMemo(
+    () =>
+      LEARNING_STAGES.filter(
+        (s) =>
+          isStageUnlocked(state, s.id) &&
+          getStageProgress(state, s.id).status !== "completed"
+      ).flatMap((s) =>
+        s.unlockFeatureIds
+          .map((id) => FEATURE_BY_ID[id])
+          .filter(Boolean)
+          .map((f) => ({ stage: s.title, feature: f! }))
+      ),
+    [state]
+  )
+
   const [lockedStage, setLockedStage] = useState<LearningStage | null>(null)
   const [showFoundation, setShowFoundation] = useState(false)
 
@@ -211,15 +229,6 @@ export function LearningMapContent() {
       celebrateFoundation()
     }
   }, [state, celebrateFoundation])
-
-  const explorationUnlocked = LEARNING_STAGES.filter(
-    (s) => isStageUnlocked(state, s.id) && getStageProgress(state, s.id).status !== "completed"
-  ).flatMap((s) =>
-    s.unlockFeatureIds
-      .map((id) => FEATURE_BY_ID[id])
-      .filter(Boolean)
-      .map((f) => ({ stage: s.title, feature: f! }))
-  )
 
   return (
     <AppShell>

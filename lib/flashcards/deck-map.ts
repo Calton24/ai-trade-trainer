@@ -5,6 +5,7 @@ const PATH_TO_DECK: Record<string, string> = {
   "icc-strategy": "icc",
   "risk-management": "risk-management",
   "trading-psychology": "psychology",
+  "professional-forex": "professional-forex",
 }
 
 export function getDeckSlugForPath(pathSlug: string): string {

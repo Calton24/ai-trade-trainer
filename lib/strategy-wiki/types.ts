@@ -7,6 +7,7 @@ export type StrategyCategory =
   | "Reversal"
   | "Day Trading"
   | "Structure"
+  | "Professional Forex"
 
 export type MasteryLevel =
   | "not_started"

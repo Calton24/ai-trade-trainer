@@ -27,6 +27,10 @@ export const DECK_UNLOCK_RULES: Record<
     requiredNodeIds: ["node-lesson-risk-reward"],
     lockedMessage: "Complete Risk/Reward on the Learning Map first.",
   },
+  psychology: {
+    requiredNodeIds: ["node-journal-first"],
+    lockedMessage: "Write your first journal reflection before the psychology deck.",
+  },
   "trend-spotter": {
     requiredNodeIds: ["node-trend-what-is"],
     lockedMessage: "Complete Trend Basics before trend flashcards.",
@@ -38,6 +42,11 @@ export const DECK_UNLOCK_RULES: Record<
   "book-lab": {
     requiredNodeIds: ["node-lesson-what-is-trading"],
     lockedMessage: "Start with What is Trading? on the Learning Map first.",
+  },
+  "professional-forex": {
+    requiredNodeIds: ["node-lesson-market-context"],
+    lockedMessage:
+      "Start the Professional Forex Workflow track (Stage 13) before this deck.",
   },
 }
 
