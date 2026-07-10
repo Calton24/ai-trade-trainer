@@ -2,6 +2,7 @@ import { entryStopTargetDrill } from "@/content/drills/entry-stop-target"
 import { spotTheTrendDrill } from "@/content/drills/spot-the-trend"
 import { forexBasicsPath } from "@/content/paths/forex-basics"
 import { iccStrategyPath } from "@/content/paths/icc-strategy"
+import { marketStructureMasteryPath } from "@/content/paths/market-structure"
 import { priceActionPath } from "@/content/paths/price-action"
 import { professionalForexPath } from "@/content/paths/professional-forex"
 import { riskManagementPath } from "@/content/paths/risk-management"
@@ -9,6 +10,7 @@ import { tradingFoundationsPath } from "@/content/paths/trading-foundations"
 import { tradingPsychologyPath } from "@/content/paths/trading-psychology"
 import { FOREX_BASICS_QUIZZES } from "@/content/quizzes/forex-basics-checks"
 import { iccCheckQuiz } from "@/content/quizzes/icc-check"
+import { MARKET_STRUCTURE_QUIZZES } from "@/content/quizzes/market-structure-checks"
 import { priceActionLevelsCheckQuiz } from "@/content/quizzes/price-action-check"
 import { PROFESSIONAL_FOREX_QUIZZES } from "@/content/quizzes/professional-forex-checks"
 import { RISK_MANAGEMENT_QUIZZES } from "@/content/quizzes/risk-management-checks"
@@ -41,6 +43,7 @@ const RAW_PATHS = [
   tradingFoundationsPath,
   forexBasicsPath,
   priceActionPath,
+  marketStructureMasteryPath,
   iccStrategyPath,
   riskManagementPath,
   tradingPsychologyPath,
@@ -53,6 +56,7 @@ const RAW_QUIZZES: CourseQuiz[] = [
   priceActionLevelsCheckQuiz,
   iccCheckQuiz,
   ...FOREX_BASICS_QUIZZES,
+  ...MARKET_STRUCTURE_QUIZZES,
   ...RISK_MANAGEMENT_QUIZZES,
   ...TRADING_PSYCHOLOGY_QUIZZES,
   ...PROFESSIONAL_FOREX_QUIZZES,

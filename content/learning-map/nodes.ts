@@ -712,6 +712,19 @@ export const LEARNING_NODES: LearningNode[] = [
     xpReward: 35,
     stageId: "stage-psychology-journaling",
   },
+  {
+    id: "node-lesson-market-structure",
+    slug: "what-is-market-structure",
+    title: "Market Structure Mastery",
+    type: "lesson",
+    level: "beginner",
+    refId: "ms-what-is-structure",
+    href: "/paths/market-structure-mastery/lessons/what-is-market-structure",
+    prerequisites: ["node-lesson-swing-highs"],
+    unlocks: [],
+    xpReward: 30,
+    stageId: "stage-market-structure",
+  },
 ]
 
 export const NODE_BY_ID = Object.fromEntries(

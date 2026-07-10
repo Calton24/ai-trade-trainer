@@ -4,6 +4,11 @@ import type { LessonWidget } from "@/lib/course/widgets"
 
 import { PipCalculator, PositionSizeCalculator } from "./calculators"
 import { DecisionScenarios, WeeklyPlanner } from "./decision-scenarios"
+import {
+  ContinuationPredictor,
+  SwingLabeler,
+  TrendBuilder,
+} from "./market-structure"
 import { MatchPairs } from "./match-pairs"
 import { OrderSteps } from "./order-steps"
 import {
@@ -43,6 +48,12 @@ export function LessonWidgetRenderer({ widget }: { widget: LessonWidget }) {
       return <DailyChecklist widget={widget} />
     case "journal-review":
       return <JournalReview widget={widget} />
+    case "swing-labeler":
+      return <SwingLabeler widget={widget} />
+    case "continuation-predictor":
+      return <ContinuationPredictor widget={widget} />
+    case "trend-builder":
+      return <TrendBuilder widget={widget} />
     default:
       return null
   }

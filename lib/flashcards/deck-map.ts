@@ -1,6 +1,7 @@
 const PATH_TO_DECK: Record<string, string> = {
   "trading-foundations": "trading-basics",
   "price-action": "market-structure",
+  "market-structure-mastery": "market-structure-mastery",
   "forex-basics": "forex-basics",
   "icc-strategy": "icc",
   "risk-management": "risk-management",

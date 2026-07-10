@@ -111,6 +111,60 @@ export interface WeeklyPlannerWidget {
   }[]
 }
 
+// ---- Market Structure widgets ----
+
+export type SwingLabel = "HH" | "HL" | "LH" | "LL"
+
+/** A swing point on a normalised 0–100 chart grid (x left→right, y is price). */
+export interface SwingPoint {
+  /** 0–100 horizontal position (chronological order). */
+  x: number
+  /** 0–100 vertical position — HIGHER number = HIGHER price (rendered inverted). */
+  y: number
+  /** Whether this point is a swing high (peak) or swing low (trough). */
+  type: "high" | "low"
+  /** The correct structure label for this point relative to the previous same-type swing. */
+  label: SwingLabel
+}
+
+/**
+ * Trend Detective: a zig-zag line drawn through swing points. The student
+ * labels each swing HH/HL/LH/LL, then classifies the resulting trend.
+ */
+export interface SwingLabelerWidget {
+  kind: "swing-labeler"
+  prompt: string
+  points: SwingPoint[]
+  /** The correct overall trend classification. */
+  trend: "Uptrend" | "Downtrend" | "Range" | "Transition"
+  trendExplain: string
+}
+
+/**
+ * Continuation Predictor: a chart pauses after a sequence of swings; the
+ * student predicts what the market most likely does next.
+ */
+export interface ContinuationPredictorWidget {
+  kind: "continuation-predictor"
+  prompt: string
+  points: SwingPoint[]
+  options?: string[]
+  correct: string
+  explain: string
+}
+
+/**
+ * Trend Builder: the student places swing points to construct a target
+ * structure (e.g. a clean uptrend). Graded on the HH/HL (or LH/LL) pattern.
+ */
+export interface TrendBuilderWidget {
+  kind: "trend-builder"
+  prompt: string
+  target: "Uptrend" | "Downtrend"
+  /** Number of swing points the student must place (alternating high/low). */
+  pointCount: number
+}
+
 export type LessonWidget =
   | SortBucketsWidget
   | MatchPairsWidget
@@ -125,3 +179,6 @@ export type LessonWidget =
   | DailyChecklistWidget
   | JournalReviewWidget
   | WeeklyPlannerWidget
+  | SwingLabelerWidget
+  | ContinuationPredictorWidget
+  | TrendBuilderWidget

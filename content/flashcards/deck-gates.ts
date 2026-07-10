@@ -11,6 +11,10 @@ export const DECK_UNLOCK_RULES: Record<
     requiredNodeIds: ["node-lesson-swing-highs"],
     lockedMessage: "Complete Swing Highs and Swing Lows before this deck.",
   },
+  "market-structure-mastery": {
+    requiredNodeIds: ["node-lesson-swing-highs"],
+    lockedMessage: "Complete Swing Highs and Swing Lows before Market Structure Mastery cards.",
+  },
   "support-resistance": {
     requiredNodeIds: ["node-chart-support"],
     lockedMessage: "Complete Support chart practice on the Learning Map first.",

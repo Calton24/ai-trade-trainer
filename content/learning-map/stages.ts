@@ -56,7 +56,7 @@ export const LEARNING_STAGES: LearningStage[] = [
       "node-lesson-swing-highs",
       "node-lesson-trends-ranges",
     ],
-    optionalNodeIds: ["node-drill-spot-trend"],
+    optionalNodeIds: ["node-drill-spot-trend", "node-lesson-market-structure"],
     unlockNodeIds: ["node-trend-what-is"],
     unlockFeatureIds: ["feature-chart-lab-swings"],
     skillsGained: ["Swing highs", "Swing lows", "Trend vs range"],

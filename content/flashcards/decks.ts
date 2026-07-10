@@ -5,6 +5,7 @@ import { chartCards } from "@/content/flashcards/chart-cards"
 import { forexBasicsCards } from "@/content/flashcards/forex-basics"
 import { iccCards } from "@/content/flashcards/icc"
 import { marketStructureCards } from "@/content/flashcards/market-structure"
+import { marketStructureMasteryCards } from "@/content/flashcards/market-structure-mastery"
 import { professionalForexCards } from "@/content/flashcards/professional-forex"
 import { psychologyCards } from "@/content/flashcards/psychology"
 import { riskManagementCards } from "@/content/flashcards/risk-management"
@@ -118,6 +119,14 @@ export const FLASHCARD_DECK_DEFS: Omit<FlashcardDeck, "cardIds">[] = [
     category: "Professional Forex",
     difficulty: "advanced",
   },
+  {
+    id: "deck-market-structure-mastery",
+    slug: "market-structure-mastery",
+    title: "Market Structure Mastery",
+    description: "HH/HL/LH/LL, trends, phases, continuation, and reversal.",
+    category: "Price Action",
+    difficulty: "beginner",
+  },
 ]
 
 export const ALL_FLASHCARD_ARRAYS = [
@@ -134,6 +143,7 @@ export const ALL_FLASHCARD_ARRAYS = [
   trendSpotterCards,
   chartCards,
   professionalForexCards,
+  marketStructureMasteryCards,
 ]
 
 export const DECK_SLUG_TO_CARDS: Record<string, typeof tradingBasicsCards> = {
@@ -150,4 +160,5 @@ export const DECK_SLUG_TO_CARDS: Record<string, typeof tradingBasicsCards> = {
   "trend-spotter": trendSpotterCards,
   "chart-cards": chartCards,
   "professional-forex": professionalForexCards,
+  "market-structure-mastery": marketStructureMasteryCards,
 }
