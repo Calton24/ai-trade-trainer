@@ -15,6 +15,7 @@ import { useUserState } from "@/components/providers/user-state-provider"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { fitViewport, type ChartViewport } from "@/lib/execution-lab/chart-viewport"
+import { useExecutionAttemptTracking } from "@/lib/execution-analytics/use-execution-attempt"
 import { createDefaultPlan } from "@/lib/execution-lab/default-plan"
 import type { ChartDrawing, DrawingTool } from "@/lib/execution-lab/drawings"
 import { computeTradeMetrics } from "@/lib/execution-lab/sizing"
@@ -53,6 +54,10 @@ export function ExecutionWorkspace({
   onNext,
 }: ExecutionWorkspaceProps) {
   const { recordExecutionAttempt } = useUserState()
+  const { markInteraction, completeAttempt } = useExecutionAttemptTracking({
+    scenarioId: scenario.id,
+    mode,
+  })
   const [phase, setPhase] = useState<TradePhase>("planning")
   const [submitted, setSubmitted] = useState(false)
   const [validation, setValidation] = useState<ReturnType<typeof validateExecution> | null>(null)
@@ -127,6 +132,7 @@ export function ExecutionWorkspace({
 
   const handleChange = useCallback(
     (patch: Partial<ExecutionTradePlan>) => {
+      markInteraction()
       setPlan((p) => {
         const next = { ...p, ...patch }
         if ((patch.direction === "buy" || patch.direction === "sell") && !patch.lots) {
@@ -145,7 +151,7 @@ export function ExecutionWorkspace({
         return next
       })
     },
-    [scenario]
+    [scenario, markInteraction]
   )
 
   const finalizeTrade = useCallback(
@@ -157,6 +163,12 @@ export function ExecutionWorkspace({
         ...plan,
         lots: plan.lots || metrics?.lots || 0,
       })
+      const violations = [
+        ...detectPlanningViolations(scenario, plan),
+        ...(trade?.violations ?? []),
+      ]
+      const managementScore = scoreManagement(trade, tradeOutcome)
+
       setValidation(result)
       setOutcome(tradeOutcome)
       setPhase("complete")
@@ -187,12 +199,30 @@ export function ExecutionWorkspace({
         pips: metrics?.stopPips ?? 0,
         rr: metrics?.rr ?? 0,
       })
+
+      void completeAttempt({
+        direction: plan.direction,
+        strategy: plan.strategy,
+        entry: plan.entry,
+        stop: plan.stop,
+        target: plan.target,
+        lots: plan.lots || metrics?.lots || 0,
+        accountSize: plan.accountSize,
+        riskPercent: plan.riskPercent,
+        confidence: plan.confidence,
+        hintsUsed: 0,
+        revealUsed: false,
+        ruleViolations: violations,
+        managementScore,
+        outcome: tradeOutcome,
+      })
       if (trade) setActiveTrade(trade)
     },
-    [scenario, plan, metrics, mode, recordExecutionAttempt, replay]
+    [scenario, plan, metrics, mode, recordExecutionAttempt, replay, completeAttempt]
   )
 
   const handlePlaceOrder = () => {
+    markInteraction()
     if (plan.direction === "no-trade" || plan.direction === "wait") {
       const correctSkip =
         scenario.idealDirection === "no-trade" || scenario.idealDirection === "wait"

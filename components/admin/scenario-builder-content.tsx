@@ -26,6 +26,12 @@ import {
   buildExecutionScenarioFromDraft,
   createEmptyDraft,
 } from "@/lib/scenario-builder/types"
+import {
+  BUILDER_TEMPLATES,
+  applyTemplateWithCandles,
+  generateSampleCandles,
+  type BuilderTemplateId,
+} from "@/lib/scenario-builder/templates"
 import type { StrategyChoice, TradeDirection } from "@/lib/execution-lab/types"
 import { cn } from "@/lib/utils"
 
@@ -71,6 +77,37 @@ export function ScenarioBuilderContent({ adminEmail }: ScenarioBuilderContentPro
   const update = useCallback((patch: Partial<ScenarioDraft>) => {
     setDraft((d) => ({ ...d, ...patch }))
   }, [])
+
+  const loadTemplate = (templateId: BuilderTemplateId) => {
+    const next = applyTemplateWithCandles(templateId)
+    setDraft(next)
+    setCsvText(candlesToCsv(next.candles))
+    setCsvErrors([])
+    setCsvWarnings([])
+    setValidationPreview(null)
+    replay.setCurrentIndex(next.pauseIndex)
+  }
+
+  const regenerateCandles = () => {
+    const template = BUILDER_TEMPLATES.find(
+      (t) => t.patch.category === draft.category || t.patch.behaviour === draft.behaviour
+    )
+    const kind = template?.kind ?? "uptrend"
+    const candles = generateSampleCandles(kind, draft.symbol, draft.id)
+    const pauseIndex = Math.min(draft.pauseIndex, candles.length - 1)
+    const c = candles[pauseIndex] ?? candles[candles.length - 1]
+    update({ candles, pauseIndex, idealEntry: c.close })
+    setCsvText(candlesToCsv(candles))
+    setCsvErrors([])
+    setCsvWarnings([])
+  }
+
+  const slugifyTitle = (title: string) =>
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 40)
 
   const parseCsv = () => {
     const result = parseOhlcCsv(csvText)
@@ -183,6 +220,26 @@ export function ScenarioBuilderContent({ adminEmail }: ScenarioBuilderContentPro
         </p>
       </div>
 
+      <section className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+        <h2 className="text-sm font-medium">Quick start (&lt; 5 min)</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Load a template with sample OHLC, then tweak metadata and export. One click =
+          form + candles + levels pre-filled.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {BUILDER_TEMPLATES.map((t) => (
+            <Button key={t.id} size="sm" variant="outline" onClick={() => loadTemplate(t.id)}>
+              {t.label}
+            </Button>
+          ))}
+          {draft.candles.length > 0 && (
+            <Button size="sm" variant="ghost" onClick={regenerateCandles}>
+              Regenerate OHLC
+            </Button>
+          )}
+        </div>
+      </section>
+
       <div className="grid gap-8 lg:grid-cols-2">
         <section className="space-y-4 rounded-xl border border-border/60 bg-card/50 p-5">
           <h2 className="font-medium">Scenario metadata</h2>
@@ -196,7 +253,15 @@ export function ScenarioBuilderContent({ adminEmail }: ScenarioBuilderContentPro
               />
             </Field>
             <Field label="Title">
-              <Input value={draft.title} onChange={(e) => update({ title: e.target.value })} />
+              <Input
+                value={draft.title}
+                onChange={(e) => update({ title: e.target.value })}
+                onBlur={() => {
+                  if (draft.id.startsWith("custom-scenario") || draft.id.startsWith("pack-")) {
+                    update({ id: `pack-${slugifyTitle(draft.title)}` })
+                  }
+                }}
+              />
             </Field>
           </div>
 

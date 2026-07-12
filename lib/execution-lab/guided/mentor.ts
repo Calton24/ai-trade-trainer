@@ -44,6 +44,9 @@ export function getMentorMessage(
     if (stepId === "behaviour" && scenario.bestStrategy === "no-trade") {
       return "Sometimes the professional move is no trade at all."
     }
+    if (stepId === "behaviour" && scenario.commonMistakes?.[0]) {
+      return `Common mistake here: ${scenario.commonMistakes[0]}`
+    }
     return STRUGGLE[attempts % STRUGGLE.length]
   }
 
@@ -62,6 +65,12 @@ export function getMentorMessage(
     case "swing-lows":
       return "Click the chart to mark swings — precision matters."
     case "behaviour":
+      if (scenario.packId === "patience") {
+        return "Patience Academy — is there a high-probability trade, or should professionals wait?"
+      }
+      if (scenario.packId === "eod") {
+        return "EOD Academy — read daily context first. What behaviour is the market showing?"
+      }
       return "What behaviour is the market showing — trend, pullback, reversal, or no trade?"
     case "evidence":
       return "Select every clue that supports your read — structure, momentum, session, liquidity."

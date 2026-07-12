@@ -8,6 +8,7 @@ import { useChartReplay } from "@/components/simulator/use-chart-replay"
 import { useUserState } from "@/components/providers/user-state-provider"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useExecutionAttemptTracking } from "@/lib/execution-analytics/use-execution-attempt"
 import { detectFillOutcome } from "@/lib/execution-lab/fills"
 import {
   BEHAVIOUR_OPTIONS,
@@ -115,6 +116,10 @@ export function GuidedWorkspace({
   onNext,
 }: GuidedWorkspaceProps) {
   const { recordExecutionAttempt } = useUserState()
+  const { markInteraction, completeAttempt } = useExecutionAttemptTracking({
+    scenarioId: scenario.id,
+    mode,
+  })
   const steps = useMemo(() => buildGuidedSteps(scenario), [scenario])
   const [session, setSession] = useState(createSession)
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -198,6 +203,7 @@ export function GuidedWorkspace({
   }, [])
 
   const advanceStep = useCallback(() => {
+    markInteraction()
     setSession((s) => {
       const completed = s.completedSteps.includes(currentStepId)
         ? s.completedSteps
@@ -214,10 +220,11 @@ export function GuidedWorkspace({
     setFeedback(null)
     setFeedbackOk(null)
     setCanContinue(false)
-  }, [currentStepId, steps.length])
+  }, [currentStepId, steps.length, markInteraction])
 
   const checkAnswer = useCallback(
     (stepId: GuidedStepId = currentStepId) => {
+      markInteraction()
       const result = validateGuidedStep(stepId, scenario, {
         marketAnswer: session.marketAnswer,
         timeframeAnswer: session.timeframeAnswer,
@@ -242,10 +249,11 @@ export function GuidedWorkspace({
       }
       return result.correct
     },
-    [currentStepId, scenario, session]
+    [currentStepId, scenario, session, markInteraction]
   )
 
   const handleHint = () => {
+    markInteraction()
     setSession((s) => {
       const next = bumpMetric(s, currentStepId, {
         hintsUsed: (s.stepMetrics[currentStepId]?.hintsUsed ?? 0) + 1,
@@ -256,6 +264,7 @@ export function GuidedWorkspace({
   }
 
   const handleReveal = () => {
+    markInteraction()
     setSession((s) =>
       bumpMetric(s, currentStepId, {
         revealUsed: true,
@@ -268,6 +277,7 @@ export function GuidedWorkspace({
   }
 
   const handleChartClick = (point: ChartPoint) => {
+    markInteraction()
     if (currentStepId === "swing-highs") {
       setSession((s) => ({
         ...s,
@@ -401,6 +411,27 @@ export function GuidedWorkspace({
       rr: metrics?.rr ?? 0,
     })
 
+    const hintsUsed = Object.values(session.stepMetrics).reduce(
+      (s, m) => s + (m?.hintsUsed ?? 0),
+      0
+    )
+    const revealUsed = Object.values(session.stepMetrics).some((m) => m?.revealUsed)
+
+    void completeAttempt({
+      direction: plan.direction,
+      strategy: plan.strategy,
+      entry: plan.entry,
+      stop: plan.stop,
+      target: plan.target,
+      lots: plan.lots || metrics?.lots || 0,
+      accountSize: plan.accountSize,
+      riskPercent: plan.riskPercent,
+      confidence: plan.confidence,
+      hintsUsed,
+      revealUsed,
+      outcome: tradeOutcome,
+    })
+
     setSession((s) => ({
       ...s,
       stepIndex: steps.length - 1,
@@ -475,7 +506,26 @@ export function GuidedWorkspace({
 
       <MentorPanel message={mentorLine} />
 
+      {/* Mobile step progress — sidebar hidden below xl */}
+      <div className="rounded-xl border border-border/60 bg-card/50 px-4 py-3 xl:hidden">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            Step {session.stepIndex + 1} / {steps.length} · {currentStep.title}
+          </span>
+          <span>{Math.round(((session.stepIndex + (canContinue ? 1 : 0)) / steps.length) * 100)}%</span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-200"
+            style={{
+              width: `${Math.round(((session.stepIndex + (canContinue ? 1 : 0)) / steps.length) * 100)}%`,
+            }}
+          />
+        </div>
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-[300px_1fr_320px]">
+        <div className="order-3 xl:order-1">
         <GuidedStepPanel
           steps={steps}
           stepIndex={session.stepIndex}
@@ -489,8 +539,9 @@ export function GuidedWorkspace({
           onContinue={advanceStep}
           canContinue={canContinue}
         />
+        </div>
 
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="order-1 flex min-w-0 flex-col gap-3 xl:order-2">
           <div className="overflow-hidden rounded-xl border border-border/60">
             <ExecutionChart
               candles={visibleCandles}
@@ -599,6 +650,7 @@ export function GuidedWorkspace({
           )}
         </div>
 
+        <div className="order-2 xl:order-3">
         {showTicket ? (
           <ExecutionTicket
             scenario={scenario}
@@ -609,7 +661,7 @@ export function GuidedWorkspace({
             disabled={!atDecisionPoint || currentStepId !== "execution"}
           />
         ) : (
-          <div className="hidden rounded-xl border border-border/60 bg-card/40 p-5 xl:block">
+          <div className="rounded-xl border border-border/60 bg-card/40 p-5">
             <p className="text-sm font-medium">Up next</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Complete each coaching step. Execution unlocks after strategy selection.
@@ -631,6 +683,7 @@ export function GuidedWorkspace({
             </ul>
           </div>
         )}
+        </div>
       </div>
 
       {showCompletion && (
@@ -669,7 +722,7 @@ function MultiSelectGrid<T extends string>({
             type="button"
             onClick={() => onToggle(o.id)}
             className={cn(
-              "rounded-lg border px-3 py-2 text-sm transition-colors",
+              "app-press rounded-lg border px-3 py-2 text-sm transition-colors duration-150",
               active
                 ? "border-primary bg-primary/10 text-primary"
                 : "border-border/60 text-muted-foreground hover:border-primary/40"
@@ -700,7 +753,7 @@ function ChoiceGrid<T extends string>({
           type="button"
           onClick={() => onPick(o.id)}
           className={cn(
-            "rounded-lg border px-4 py-2 text-sm transition-colors",
+            "app-press rounded-lg border px-4 py-2 text-sm transition-colors duration-150",
             selected === o.id
               ? "border-primary bg-primary/10 text-primary"
               : "border-border/60 text-muted-foreground hover:border-primary/40"

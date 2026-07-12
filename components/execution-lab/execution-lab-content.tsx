@@ -1,20 +1,23 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useMemo, useState } from "react"
 import { ArrowRightIcon, CrosshairIcon, Gamepad2Icon, GraduationCapIcon } from "lucide-react"
 
 import { AppShell } from "@/components/layout/app-shell"
+import { ExecutionAcademyPackCard } from "@/components/execution-lab/execution-academy-pack-card"
 import { useUserState } from "@/components/providers/user-state-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  ALL_EXECUTION_SCENARIOS,
+  EXECUTION_PACKS,
   EXECUTION_SCENARIOS,
+  getPackScenarios,
   pickRandomScenario,
 } from "@/content/execution-lab"
-import type { ExecutionMode } from "@/lib/execution-lab/types"
+import type { ExecutionMode, ExecutionPackId } from "@/lib/execution-lab/types"
+import { computeAllPackProgress } from "@/lib/execution-lab/pack-progress"
 import { cn } from "@/lib/utils"
 
 const MODES: {
@@ -47,17 +50,29 @@ const MODES: {
   },
 ]
 
+const PACK_IDS: ExecutionPackId[] = ["continuation", "reversal", "patience", "eod"]
+
+function isPackId(value: string | null): value is ExecutionPackId {
+  return PACK_IDS.includes(value as ExecutionPackId)
+}
+
 export function ExecutionLabContent() {
   const router = useRouter()
-  const { executionStats } = useUserState()
+  const searchParams = useSearchParams()
+  const { executionStats, state } = useUserState()
   const [mode, setMode] = useState<ExecutionMode>("guided")
+
+  const packFilter = searchParams.get("pack")
+  const activePack = isPackId(packFilter) ? packFilter : null
+
+  const packProgress = useMemo(() => computeAllPackProgress(state), [state])
 
   const startArcade = () => {
     const scenario = pickRandomScenario()
     router.push(`/execution-lab/${scenario.id}?mode=arcade`)
   }
 
-  const reversalPack = ALL_EXECUTION_SCENARIOS.filter((s) => s.id.startsWith("rev-"))
+  const browseScenarios = activePack ? getPackScenarios(activePack) : []
 
   return (
     <AppShell>
@@ -68,9 +83,8 @@ export function ExecutionLabContent() {
               Execution Lab
             </h1>
             <p className="max-w-2xl text-muted-foreground">
-              Trade simulated markets with a real ticket — drag entry, stop, and
-              target on the chart. Size positions, validate risk, and get coached
-              like a mentor.
+              Professional deliberate practice — four academies, 80 scenarios, guided
+              coaching, and institutional trade review.
             </p>
           </div>
           {executionStats.attempts > 0 && (
@@ -79,6 +93,14 @@ export function ExecutionLabContent() {
               <p className="text-muted-foreground">
                 {executionStats.attempts} trades simulated
               </p>
+              <Button
+                className="mt-2"
+                variant="ghost"
+                size="sm"
+                render={<Link href="/execution-lab/performance" />}
+              >
+                View performance
+              </Button>
             </div>
           )}
         </div>
@@ -101,11 +123,6 @@ export function ExecutionLabContent() {
               <m.icon className="size-5 text-primary" />
               <p className="mt-2 font-medium">{m.label}</p>
               <p className="mt-1 text-xs text-muted-foreground">{m.description}</p>
-              {!m.available && (
-                <Badge className="mt-2" variant="secondary">
-                  Coming soon
-                </Badge>
-              )}
             </button>
           ))}
         </div>
@@ -114,8 +131,8 @@ export function ExecutionLabContent() {
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
             <p className="font-medium">Academy Mode</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your mentor walks you through market context, structure, strategy, and
-              execution — with progressive hints so you never get stuck.
+              Your mentor walks you through behaviour, structure, strategy, and
+              execution — with contextual coaching on every step.
             </p>
           </div>
         )}
@@ -134,70 +151,94 @@ export function ExecutionLabContent() {
         )}
 
         <div>
-          <h2 className="text-lg font-semibold">Reversal Academy Pack</h2>
+          <h2 className="text-lg font-semibold">Professional Academies</h2>
           <p className="text-sm text-muted-foreground">
-            20 curated scenarios — healthy continuation, false reversals, London/NY
-            sessions, Gold, EOD setups, and no-trade charts.
+            Four training programs — 20 scenarios each. Bronze → Master progression.
           </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {reversalPack.map((s) => (
-              <Link
-                key={s.id}
-                href={`/execution-lab/${s.id}?mode=${mode}`}
-                className="group rounded-xl border border-primary/20 bg-primary/5 p-5 transition-colors hover:border-primary/40"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium group-hover:text-primary">{s.title}</p>
-                  <Badge variant="outline" className="shrink-0 text-[10px]">
-                    {s.difficulty}
-                  </Badge>
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {s.symbol} · {s.behaviour ?? s.category}
-                  {s.reversalGrade ? ` · Grade ${s.reversalGrade}` : ""}
-                </p>
-              </Link>
-            ))}
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            {EXECUTION_PACKS.map((pack) => {
+              const progress = packProgress.find((p) => p.packId === pack.id)!
+              return (
+                <ExecutionAcademyPackCard
+                  key={pack.id}
+                  pack={pack}
+                  progress={progress}
+                  mode={mode}
+                />
+              )
+            })}
           </div>
-          <Button className="mt-4" variant="outline" render={<Link href="/paths/market-behaviour-academy" />}>
-            Open Reversal Academy path
-          </Button>
         </div>
 
-        <div>
-          <h2 className="text-lg font-semibold">Core Scenarios</h2>
-          <p className="text-sm text-muted-foreground">
-            Curated setups — trend, continuation, reversal, break & retest, and no-trade
-            scenarios.
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {EXECUTION_SCENARIOS.map((s) => (
-              <Link
-                key={s.id}
-                href={`/execution-lab/${s.id}?mode=${mode}`}
-                className="group rounded-xl border border-border/60 bg-card/50 p-5 transition-colors hover:border-primary/40"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium group-hover:text-primary">{s.title}</p>
-                  <Badge variant="outline" className="shrink-0 text-[10px]">
-                    {s.difficulty}
-                  </Badge>
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {s.symbol} · {s.category.replace("-", " ")}
-                </p>
-              </Link>
-            ))}
+        {activePack && (
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold">
+                {EXECUTION_PACKS.find((p) => p.id === activePack)?.title}
+              </h2>
+              <Button variant="ghost" size="sm" render={<Link href="/execution-lab" />}>
+                All academies
+              </Button>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {browseScenarios.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/execution-lab/${s.id}?mode=${mode}`}
+                  className="group rounded-xl border border-border/60 bg-card/50 p-5 transition-colors hover:border-primary/40"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium group-hover:text-primary">{s.title}</p>
+                    <Badge variant="outline" className="shrink-0 text-[10px]">
+                      {s.difficulty}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {s.symbol} · {s.behaviour ?? s.category}
+                    {s.session ? ` · ${s.session}` : ""}
+                  </p>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {!activePack && (
+          <div>
+            <h2 className="text-lg font-semibold">Core Scenarios</h2>
+            <p className="text-sm text-muted-foreground">
+              Quick-start demos — trend, continuation, reversal, break & retest, and
+              no-trade.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {EXECUTION_SCENARIOS.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/execution-lab/${s.id}?mode=${mode}`}
+                  className="group rounded-xl border border-border/60 bg-card/50 p-5 transition-colors hover:border-primary/40"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium group-hover:text-primary">{s.title}</p>
+                    <Badge variant="outline" className="shrink-0 text-[10px]">
+                      {s.difficulty}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {s.symbol} · {s.category.replace("-", " ")}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="rounded-xl border border-border/60 bg-card/50 p-5">
           <p className="text-sm font-medium">Funded Trader Journey</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Progress through demo → £10k challenge → £25k → £50k → funded account.
-            Prop-firm rules, drawdown limits, and payouts. Coming in the next milestone.
+            Progress through demo → challenge → funded account. Coming in the next
+            milestone.
           </p>
           <Button className="mt-3" variant="outline" render={<Link href="/career" />}>
             Preview Journey

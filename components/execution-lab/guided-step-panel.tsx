@@ -42,7 +42,7 @@ export function GuidedStepPanel({
   const canReveal = hintLevel >= maxHints && !revealed
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-border/60 bg-card/80">
+    <div className="flex h-full flex-col rounded-xl border border-border/60 bg-card/80 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)]">
       <div className="border-b border-border/60 px-4 py-3">
         <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           Academy Mode
@@ -83,18 +83,23 @@ export function GuidedStepPanel({
         {feedback && (
           <div
             className={cn(
-              "rounded-lg border p-3 text-sm",
+              "rounded-lg border p-3 text-sm transition-colors duration-200",
               feedbackOk
-                ? "border-primary/30 bg-primary/5 text-primary"
-                : "border-destructive/30 bg-destructive/5 text-destructive"
+                ? "border-primary/30 bg-primary/5 text-foreground"
+                : "border-amber-500/30 bg-amber-500/5 text-foreground"
             )}
+            role="status"
+            aria-live="polite"
           >
-            {feedback}
+            <p className={cn("text-xs font-medium", feedbackOk ? "text-primary" : "text-amber-400")}>
+              {feedbackOk ? "On track" : "Worth reconsidering"}
+            </p>
+            <p className="mt-1">{feedback}</p>
           </div>
         )}
       </div>
 
-      <div className="space-y-2 border-t border-border/60 p-4">
+      <div className="space-y-2 border-t border-border/60 bg-card/95 p-4 xl:static sticky bottom-0 z-10 backdrop-blur-sm">
         <div className="flex gap-2">
           <Button
             variant="outline"

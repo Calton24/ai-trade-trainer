@@ -1,10 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { StarIcon } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ChevronDownIcon, StarIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { SurfaceCard } from "@/components/shared/surface-card"
 import type { TradeReviewReport } from "@/lib/execution-lab/trade-review"
 import { cn } from "@/lib/utils"
 
@@ -14,8 +16,36 @@ interface TradeReviewPanelProps {
 }
 
 export function TradeReviewPanel({ report, className }: TradeReviewPanelProps) {
+  const [animatedScore, setAnimatedScore] = useState(0)
+  const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (reduced) {
+      const frame = requestAnimationFrame(() => setAnimatedScore(report.overallScore))
+      return () => cancelAnimationFrame(frame)
+    }
+
+    const target = report.overallScore
+    const duration = 600
+    const start = performance.now()
+    let frameId = 0
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setAnimatedScore(Math.round(target * eased))
+      if (progress < 1) frameId = requestAnimationFrame(tick)
+    }
+
+    frameId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frameId)
+  }, [report.overallScore])
+
+  const visibleSections = expanded ? report.sections : report.sections.slice(0, 3)
+
   return (
-    <div className={cn("rounded-xl border border-border/60 bg-card/50 p-5", className)}>
+    <SurfaceCard className={cn("app-fade-in", className)} padding="md">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/60 pb-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -27,8 +57,11 @@ export function TradeReviewPanel({ report, className }: TradeReviewPanelProps) {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-3xl font-semibold tabular-nums text-primary">
-            {report.overallScore}%
+          <p
+            className="text-3xl font-semibold tabular-nums text-primary"
+            aria-label={`Execution score ${report.overallScore} percent`}
+          >
+            {animatedScore}%
           </p>
           <p className="text-sm font-medium">{report.letterGrade}</p>
           <Badge variant="outline" className="mt-1">
@@ -38,7 +71,7 @@ export function TradeReviewPanel({ report, className }: TradeReviewPanelProps) {
       </div>
 
       <div className="mt-4 space-y-3">
-        {report.sections.map((section) => (
+        {visibleSections.map((section) => (
           <div
             key={section.label}
             className="flex items-start justify-between gap-4 border-b border-border/40 pb-3 last:border-0"
@@ -48,7 +81,7 @@ export function TradeReviewPanel({ report, className }: TradeReviewPanelProps) {
               <p className="mt-0.5 text-xs text-muted-foreground">{section.commentary}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <div className="flex">
+              <div className="flex" aria-hidden>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <StarIcon
                     key={i}
@@ -66,6 +99,21 @@ export function TradeReviewPanel({ report, className }: TradeReviewPanelProps) {
           </div>
         ))}
       </div>
+
+      {report.sections.length > 3 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2 w-full text-muted-foreground"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? "Show less" : `Show all ${report.sections.length} sections`}
+          <ChevronDownIcon
+            className={cn("size-4 transition-transform duration-200", expanded && "rotate-180")}
+            data-icon="inline-end"
+          />
+        </Button>
+      )}
 
       <div className="mt-4 rounded-lg border border-border/50 bg-background/40 p-4">
         <p className="text-sm font-medium">
@@ -96,6 +144,6 @@ export function TradeReviewPanel({ report, className }: TradeReviewPanelProps) {
           {report.suggestedDrill.label}
         </Button>
       </div>
-    </div>
+    </SurfaceCard>
   )
 }

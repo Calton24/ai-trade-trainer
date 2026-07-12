@@ -398,7 +398,7 @@ export const ExecutionChart = memo(function ExecutionChart({
   const timeTicks = Math.min(6, Math.max(3, Math.floor(candleCount / 8)))
 
   return (
-    <div ref={containerRef} className={cn("relative touch-none", className)} onWheel={handleWheel}>
+    <div ref={containerRef} className={cn("relative touch-none app-fade-in", className)} onWheel={handleWheel}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VB_WIDTH} ${VB_HEIGHT}`}

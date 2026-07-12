@@ -19,7 +19,9 @@ import { AppShell } from "@/components/layout/app-shell"
 import { useUserState } from "@/components/providers/user-state-provider"
 import { CompetenceScoreCard } from "@/components/progression/competence-score-card"
 import { AdaptiveCoachCard } from "@/components/dashboard/adaptive-coach-card"
+import { AnalyticsCoachBoost } from "@/components/dashboard/analytics-coach-boost"
 import { DailyTrainingCard } from "@/components/dashboard/daily-training-card"
+import { DashboardHero } from "@/components/dashboard/dashboard-hero"
 import { MarketStructurePracticeCard } from "@/components/dashboard/market-structure-practice-card"
 import { WeeklyReportCard } from "@/components/dashboard/weekly-report-card"
 import { MarketReadingHero } from "@/components/skills/market-reading-hero"
@@ -27,7 +29,9 @@ import { SkillTreePanel } from "@/components/skills/skill-tree-panel"
 import { TraderRoadmapWidget } from "@/components/simulator/trader-roadmap-widget"
 import { ReadinessScoreCard } from "@/components/trader-readiness/readiness-score-card"
 import { EmptyState } from "@/components/shared/empty-state"
+import { Reveal } from "@/components/shared/reveal"
 import { StatCard } from "@/components/shared/stat-card"
+import { SurfaceCard } from "@/components/shared/surface-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -92,6 +96,22 @@ export function DashboardContent() {
   return (
     <AppShell>
       <div className="flex flex-col gap-8">
+        <DashboardHero
+          displayName={displayName}
+          isNewUser={isNewUser}
+          streak={stats.streak}
+          xp={stats.xp}
+          dailyStreak={globalSnapshot.dailyStreak}
+          nextActionTitle={learningMapStats.nextActionTitle}
+          nextActionHref={learningMapStats.nextActionHref}
+          nextActionReason={learningMapStats.nextActionReason}
+          dailyTrainingPlan={dailyTrainingPlan}
+          rankTitle={rank.rank.title}
+          percentToNext={rank.percentToNext}
+          xpToNext={rank.xpToNext}
+          isMaxRank={rank.isMax}
+        />
+
         {isNewUser && (
           <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card/80 to-card/50 p-6">
             <p className="text-sm font-medium text-primary">
@@ -146,35 +166,31 @@ export function DashboardContent() {
           </div>
         )}
 
-        <MarketReadingHero profile={skillProfile} />
+        <Reveal>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <DailyTrainingCard plan={dailyTrainingPlan} />
+            <AdaptiveCoachCard recommendations={adaptiveRecommendations} />
+          </div>
+        </Reveal>
 
-        <SkillTreePanel profile={skillProfile} />
+        <Reveal delayMs={50}>
+          <SkillTreePanel profile={skillProfile} />
+        </Reveal>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <DailyTrainingCard plan={dailyTrainingPlan} />
-          <AdaptiveCoachCard recommendations={adaptiveRecommendations} />
-        </div>
+        <Reveal delayMs={75}>
+          <MarketReadingHero profile={skillProfile} />
+        </Reveal>
 
-        <WeeklyReportCard report={weeklyReport} />
+        <AnalyticsCoachBoost />
+
+        <Reveal delayMs={100}>
+          <WeeklyReportCard report={weeklyReport} />
+        </Reveal>
 
         <MarketStructurePracticeCard />
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              {isNewUser ? "Your dashboard" : `Welcome back, ${displayName}`}
-            </h1>
-            <p className="text-muted-foreground">
-              {learningMapStats.nextActionReason}
-            </p>
-          </div>
-          <Button render={<Link href={learningMapStats.nextActionHref} />}>
-            {isNewUser ? "Start Stage 1" : learningMapStats.nextActionTitle}
-            <ArrowRightIcon data-icon="inline-end" />
-          </Button>
-        </div>
-
-        <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card/80 to-card/50 p-6">
+        <Reveal delayMs={125}>
+        <SurfaceCard variant="primary" padding="lg">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-primary">
@@ -237,7 +253,8 @@ export function DashboardContent() {
               Chart Lab exercises, and Strategy Wiki practice.
             </div>
           )}
-        </div>
+        </SurfaceCard>
+        </Reveal>
 
         {isNewUser && (
           <EmptyState
@@ -732,12 +749,12 @@ export function DashboardContent() {
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border/60 bg-card/30 p-6 text-center">
+          <SurfaceCard variant="dashed" padding="md" className="text-center">
             <p className="text-sm text-muted-foreground">
               No badges earned yet. Complete lessons and drills to unlock your
               first badge.
             </p>
-          </div>
+          </SurfaceCard>
         )}
       </div>
     </AppShell>

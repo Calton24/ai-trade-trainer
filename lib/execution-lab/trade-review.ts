@@ -1,4 +1,5 @@
 import type { ExecutionScenario, ExecutionTradePlan, ExecutionValidation } from "./types"
+import { getPackForScenario } from "@/content/execution-lab"
 import type { RuleViolation } from "./trade-management"
 
 export interface TradeReviewSection {
@@ -116,9 +117,21 @@ export function generateTradeReview(
           ? 78
           : 50
 
+  const behaviourScore =
+    plan.strategy === scenario.bestStrategy ? 92 : plan.direction === scenario.idealDirection ? 88 : 58
+
   const sections: TradeReviewSection[] = [
     {
-      label: "Trend Reading",
+      label: "Behaviour Reading",
+      score: behaviourScore,
+      stars: starsFromScore(behaviourScore),
+      commentary:
+        behaviourScore >= 85
+          ? `Correct read: ${scenario.behaviour ?? scenario.category} behaviour identified.`
+          : `Expected ${scenario.bestStrategy.replace("-", " ")} — review what behaviour the market was showing.`,
+    },
+    {
+      label: "Structure Reading",
       score: trendScore,
       stars: starsFromScore(trendScore),
       commentary: trendFb.message,
@@ -197,7 +210,17 @@ export function generateTradeReview(
     label: "Structure Replay",
     href: "/paths/market-behaviour-academy/lessons/pullback-vs-reversal",
   }
-  if (trendScore < 70) {
+
+  const pack = getPackForScenario(scenario.id)
+  if (pack) {
+    const nextId =
+      pack.scenarios.find((s) => s.difficulty === scenario.difficulty)?.id ??
+      pack.scenarios[0]?.id
+    suggestedDrill = {
+      label: `${pack.title} — next drill`,
+      href: nextId ? `/execution-lab/${nextId}?mode=guided` : pack.href,
+    }
+  } else if (trendScore < 70) {
     suggestedDrill = {
       label: "Reversal Academy — Trend Reading",
       href: "/paths/market-behaviour-academy/lessons/what-is-a-reversal",

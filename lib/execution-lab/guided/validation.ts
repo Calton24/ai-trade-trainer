@@ -93,7 +93,7 @@ export function validateGuidedStep(
         correct: ok,
         feedback: ok
           ? `Correct — this is ${scenario.symbol}.`
-          : "Not quite. Check the symbol and price scale.",
+          : "Interesting read — check the symbol and price scale. What instrument is this?",
         mentorLine: ok ? "Good observation." : "Look at the instrument label and price decimals.",
       }
     }
@@ -103,7 +103,7 @@ export function validateGuidedStep(
         correct: ok,
         feedback: ok
           ? `Correct — ${scenario.timeframe} timeframe.`
-          : "Reconsider the candle spacing and session context.",
+          : "Reconsider the candle spacing — how much time does each bar represent?",
         mentorLine: ok ? "Timeframe confirmed." : "How much time does each candle represent?",
       }
     }
@@ -115,7 +115,7 @@ export function validateGuidedStep(
         correct: ok,
         feedback: ok
           ? "Structure read matches the chart."
-          : "Walk the swings again — are highs and lows progressing?",
+          : "Walk the swings again — are highs and lows still progressing, or overlapping?",
         mentorLine: ok
           ? "Solid market read."
           : "Remember: HH/HL uptrend, LH/LL downtrend, overlap = range.",
@@ -162,7 +162,7 @@ export function validateGuidedStep(
         correct: ok,
         feedback: ok
           ? "You labelled the market behaviour correctly."
-          : `Re-read behaviour — this chart shows ${expected.replace("-", " ")}, not ${answers.behaviourAnswer?.replace("-", " ") ?? "?"}.`,
+          : `Interesting idea — this chart shows ${expected.replace("-", " ")}, not ${answers.behaviourAnswer?.replace("-", " ") ?? "?"}.`,
         mentorLine: ok
           ? "Clear behavioural read."
           : expected === "pullback"

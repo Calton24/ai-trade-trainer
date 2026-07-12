@@ -1,9 +1,10 @@
 import { generateScenario } from "@/lib/charts/generate-scenario"
 import type { ChartScenario } from "@/lib/charts/types"
+import type { Timeframe } from "@/lib/charts/types"
 
-import type { ExecutionScenario, StrategyChoice } from "@/lib/execution-lab/types"
+import type { ExecutionScenario, StrategyChoice, ExecutionPackId } from "@/lib/execution-lab/types"
 
-import { REVERSAL_EXECUTION_SCENARIOS } from "./reversal-scenarios"
+import { PROFESSIONAL_PACK_SCENARIOS } from "./packs/registry"
 
 interface ScenarioMeta {
   id: string
@@ -29,6 +30,10 @@ interface ScenarioMeta {
   journalPrompt?: string
   reversalGrade?: ExecutionScenario["reversalGrade"]
   timeframe?: string
+  commonMistakes?: string[]
+  session?: string
+  market?: string
+  packId?: ExecutionPackId
 }
 
 export type { ScenarioMeta }
@@ -46,7 +51,7 @@ function buildChart(meta: ScenarioMeta): ChartScenario {
     title: meta.title,
     description: meta.description,
     symbol: meta.symbol,
-    timeframe: "15M",
+    timeframe: (meta.timeframe ?? "15M") as Timeframe,
     concept: meta.category === "break-retest" ? "break-retest" : "trend",
     candles: generated.candles,
     annotations: generated.annotations,
@@ -137,6 +142,10 @@ function build(meta: ScenarioMeta): ExecutionScenario {
     tags: meta.tags,
     journalPrompt: meta.journalPrompt,
     reversalGrade: meta.reversalGrade,
+    commonMistakes: meta.commonMistakes,
+    session: meta.session,
+    market: meta.market ?? meta.symbol,
+    packId: meta.packId,
   }
 }
 
@@ -263,7 +272,7 @@ export const EXECUTION_SCENARIOS: ExecutionScenario[] = META.map(build)
 
 export const ALL_EXECUTION_SCENARIOS: ExecutionScenario[] = [
   ...EXECUTION_SCENARIOS,
-  ...REVERSAL_EXECUTION_SCENARIOS,
+  ...PROFESSIONAL_PACK_SCENARIOS,
 ]
 
 export function getExecutionScenario(id: string): ExecutionScenario | undefined {

@@ -1,4 +1,5 @@
 import { computeBehavioralCompetence } from "@/lib/competence/behavioral-scoring"
+import { getExecutionScenario } from "@/content/execution-lab"
 import { calculateDailyStreak, getDateKey, getWeekKey } from "@/lib/user-state/activity"
 import type { StoredPatternAttempt } from "@/lib/user-state/pattern-recognition"
 import type { UserState } from "@/lib/user-state/types"
@@ -162,26 +163,48 @@ function collectAttempts(state: UserState): ScoredAttempt[] {
   }
 
   for (const a of state.executionAttempts) {
-    out.push({
-      score: a.executionScore,
-      completedAt: a.completedAt,
-      skillId: "position-sizing",
-    })
-    out.push({
-      score: a.executionScore,
-      completedAt: a.completedAt,
-      skillId: "stop-placement",
-    })
-    out.push({
-      score: a.executionScore,
-      completedAt: a.completedAt,
-      skillId: "risk-reward",
-    })
-    out.push({
-      score: a.executionScore,
-      completedAt: a.completedAt,
-      skillId: "decision-quality",
-    })
+    const scenario = getExecutionScenario(a.scenarioId)
+    const baseSkillSet = new Set<SkillId>([
+      "position-sizing",
+      "stop-placement",
+      "risk-reward",
+      "decision-quality",
+    ])
+
+    if (scenario?.behaviour === "continuation" || scenario?.category === "continuation") {
+      baseSkillSet.add("continuation")
+      baseSkillSet.add("trend-detection")
+    }
+    if (scenario?.behaviour === "reversal" || scenario?.category === "reversal") {
+      baseSkillSet.add("reversal")
+    }
+    if (
+      scenario?.bestStrategy === "liquidity-sweep" ||
+      scenario?.tags?.includes("liquidity-sweep")
+    ) {
+      baseSkillSet.add("liquidity")
+    }
+    if (scenario?.packId === "eod" || scenario?.tags?.includes("eod")) {
+      baseSkillSet.add("market-context")
+    }
+    if (
+      scenario?.packId === "patience" ||
+      scenario?.bestStrategy === "no-trade" ||
+      scenario?.idealDirection === "no-trade" ||
+      scenario?.idealDirection === "wait"
+    ) {
+      baseSkillSet.add("trade-or-skip")
+      baseSkillSet.add("discipline")
+    }
+
+    for (const skillId of baseSkillSet) {
+      out.push({
+        score: a.executionScore,
+        completedAt: a.completedAt,
+        skillId,
+      })
+    }
+
     if (a.direction === "wait" || a.direction === "no-trade") {
       out.push({
         score: a.executionScore,
@@ -385,21 +408,21 @@ const DAILY_TRAINING_TEMPLATES: Record<
   },
   reversal: {
     id: "dt-reversal",
-    label: "Reversal Detection",
-    description: "Spot pullbacks vs real reversals in Reversal Academy",
-    count: 3,
-    href: "/paths/market-behaviour-academy/lessons/pullback-vs-reversal",
+    label: "Reversal Academy",
+    description: "20 reversal drills — never confuse pullback with reversal",
+    count: 2,
+    href: "/execution-lab?pack=reversal",
     skillId: "reversal",
-    estimatedMinutes: 8,
+    estimatedMinutes: 15,
   },
   continuation: {
     id: "dt-continuation",
-    label: "Continuation Predictor",
-    description: "Predict continuation vs reversal before the next swing",
-    count: 3,
-    href: "/paths/market-behaviour-academy/lessons/continuation-trap",
+    label: "Continuation Academy",
+    description: "20 continuation drills — healthy trends, pullbacks, and timing",
+    count: 2,
+    href: "/execution-lab?pack=continuation",
     skillId: "continuation",
-    estimatedMinutes: 6,
+    estimatedMinutes: 15,
   },
   "support-resistance": {
     id: "dt-sr",
@@ -484,12 +507,12 @@ const DAILY_TRAINING_TEMPLATES: Record<
   },
   "market-context": {
     id: "dt-context",
-    label: "Market Context",
-    description: "Run the daily professional checklist",
+    label: "EOD Academy",
+    description: "Daily context first — 20 end-of-day execution drills",
     count: 1,
-    href: "/paths/professional-forex-workflow/lessons/daily-checklist",
+    href: "/execution-lab?pack=eod",
     skillId: "market-context",
-    estimatedMinutes: 5,
+    estimatedMinutes: 15,
   },
   "pair-selection": {
     id: "dt-pairs",
@@ -502,12 +525,12 @@ const DAILY_TRAINING_TEMPLATES: Record<
   },
   "trade-or-skip": {
     id: "dt-skip",
-    label: "Trade or Skip",
-    description: "Decide if setups are worth taking",
-    count: 3,
-    href: "/strategy-wiki",
+    label: "Patience Academy",
+    description: "20 no-trade drills — when standing aside is the A+ decision",
+    count: 2,
+    href: "/execution-lab?pack=patience",
     skillId: "trade-or-skip",
-    estimatedMinutes: 12,
+    estimatedMinutes: 15,
   },
   "post-trade-review": {
     id: "dt-review",

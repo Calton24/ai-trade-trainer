@@ -63,6 +63,28 @@ export interface ExecutionScenario {
   tags?: string[]
   journalPrompt?: string
   reversalGrade?: "A+" | "A" | "B" | "C" | "D"
+  /** Coaching metadata from Scenario Builder */
+  commonMistakes?: string[]
+  session?: string
+  market?: string
+  /** Professional pack membership */
+  packId?: ExecutionPackId
+}
+
+export type ExecutionPackId = "continuation" | "reversal" | "patience" | "eod"
+
+export type PackProgressTier = "none" | "bronze" | "silver" | "gold" | "master"
+
+export interface PackProgress {
+  packId: ExecutionPackId
+  completed: number
+  total: number
+  attempted: number
+  bestScore: number
+  averageScore: number
+  weakestSkill: string | null
+  tier: PackProgressTier
+  nextScenarioId: string | null
 }
 
 export interface ExecutionTradePlan {

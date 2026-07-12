@@ -73,9 +73,9 @@ export const SKILL_PRACTICE_ROUTES: Record<SkillId, string> = {
   "trend-detection":
     "/paths/market-structure-mastery/lessons/higher-highs-and-higher-lows",
   continuation:
-    "/paths/market-behaviour-academy/lessons/four-point-rule",
+    "/execution-lab?pack=continuation",
   reversal:
-    "/paths/market-behaviour-academy/lessons/pullback-vs-reversal",
+    "/execution-lab?pack=reversal",
   "support-resistance": "/chart-lab/task-support-bounce",
   "break-retest": "/chart-lab/task-break-retest",
   liquidity: "/chart-lab",
@@ -87,10 +87,10 @@ export const SKILL_PRACTICE_ROUTES: Record<SkillId, string> = {
   "confidence-calibration":
     "/paths/market-structure-mastery/lessons/structure-replay",
   "journal-quality": "/journal",
-  "market-context": "/paths/professional-forex-workflow/lessons/daily-checklist",
+  "market-context": "/execution-lab?pack=eod",
   "pair-selection":
     "/paths/professional-forex-workflow/lessons/build-your-watchlist",
-  "trade-or-skip": "/strategy-wiki",
+  "trade-or-skip": "/execution-lab?pack=patience",
   "post-trade-review": "/journal",
   "replay-accuracy": "/paths/market-behaviour-academy/lessons/reversal-assessment",
   "decision-quality": "/execution-lab",
@@ -98,16 +98,63 @@ export const SKILL_PRACTICE_ROUTES: Record<SkillId, string> = {
 
 export const PRACTICE_DRILLS: PracticeDrill[] = [
   {
-    id: "reversal-academy",
+    id: "continuation-academy",
+    title: "Continuation Academy",
+    description:
+      "20 deliberate continuation drills — healthy trends, pullbacks, session timing, and when NOT to buy early.",
+    href: "/execution-lab?pack=continuation",
+    skillIds: ["continuation", "trend-detection", "decision-quality"],
+    difficulty: "Intermediate",
+    estimatedMinutes: 30,
+    available: true,
+    badge: "Academy",
+  },
+  {
+    id: "reversal-academy-pack",
     title: "Reversal Academy",
     description:
-      "Pullback vs reversal, four-point rule, structure breaks, and 20 Execution Lab scenarios.",
+      "20 reversal drills — early signals, confirmed reversals, traps, liquidity sweeps, and EOD fades.",
+    href: "/execution-lab?pack=reversal",
+    skillIds: ["reversal", "continuation", "liquidity", "decision-quality"],
+    difficulty: "Intermediate",
+    estimatedMinutes: 30,
+    available: true,
+    badge: "Flagship",
+  },
+  {
+    id: "patience-academy",
+    title: "Patience Academy",
+    description:
+      "20 no-trade drills — range, chop, fake breakouts, poor R:R. Standing aside is the professional move.",
+    href: "/execution-lab?pack=patience",
+    skillIds: ["trade-or-skip", "discipline", "decision-quality"],
+    difficulty: "Advanced",
+    estimatedMinutes: 30,
+    available: true,
+    badge: "Academy",
+  },
+  {
+    id: "eod-academy",
+    title: "EOD Academy",
+    description:
+      "20 end-of-day drills — daily context first, exhaustion fades, liquidity sweeps, and HTF rejection.",
+    href: "/execution-lab?pack=eod",
+    skillIds: ["market-context", "reversal", "continuation"],
+    difficulty: "Advanced",
+    estimatedMinutes: 30,
+    available: true,
+    badge: "Academy",
+  },
+  {
+    id: "reversal-academy",
+    title: "Market Behaviour Path",
+    description:
+      "Pullback vs reversal lessons plus Execution Lab integration.",
     href: "/paths/market-behaviour-academy",
     skillIds: ["reversal", "continuation", "replay-accuracy", "decision-quality"],
     difficulty: "Intermediate",
     estimatedMinutes: 25,
     available: true,
-    badge: "Flagship",
   },
   {
     id: "execution-lab",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 
 import { ExecutionLabContent } from "@/components/execution-lab/execution-lab-content"
 
@@ -9,5 +10,9 @@ export const metadata: Metadata = {
 }
 
 export default function ExecutionLabPage() {
-  return <ExecutionLabContent />
+  return (
+    <Suspense>
+      <ExecutionLabContent />
+    </Suspense>
+  )
 }
